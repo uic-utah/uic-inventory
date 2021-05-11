@@ -4,6 +4,7 @@ import Navigation from './Navigation';
 import Profile from './Profile';
 import Home from './Home';
 import Contact from './Contact';
+import CreateSite from './CreateSite';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -38,6 +39,9 @@ function App() {
             </Route>
             <Route path="/account/:id/profile">
               <Profile />
+            </Route>
+            <Route path="/site/create">
+              <CreateSite />
             </Route>
             <Route path="/">
               <Home />
