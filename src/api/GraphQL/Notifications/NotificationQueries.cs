@@ -17,8 +17,7 @@ namespace api.GraphQL {
     private readonly IHttpContextAccessor _accessor;
     private readonly ILogger _log;
 
-    public NotificationQueries(IHttpContextAccessor accessor, ILogger log)
-    {
+    public NotificationQueries(IHttpContextAccessor accessor, ILogger log) {
       _accessor = accessor;
       _log = log;
     }
