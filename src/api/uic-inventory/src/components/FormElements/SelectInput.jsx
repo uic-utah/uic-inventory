@@ -8,12 +8,14 @@ function SelectInput({ register, errors, id, text, items, placeholder = '' }) {
       <label htmlFor={id} className="">
         {text || camelToProper(id)}
       </label>
-      <select id={id} {...register(id)}>
-        <option value="" disabled selected hidden>
+      <select id={id} {...register(id)} defaultValue="">
+        <option value="" disabled hidden>
           {placeholder}
         </option>
         {items.map((item) => (
-          <option value={item.value}>{item.label || item.value}</option>
+          <option key={item.value} value={item.value}>
+            {item.label || item.value}
+          </option>
         ))}
       </select>
       <ErrorMessage errors={errors} name={id} as={ErrorMessageTag} />
