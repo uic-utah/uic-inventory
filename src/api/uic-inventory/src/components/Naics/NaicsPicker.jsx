@@ -1,33 +1,101 @@
-const topLevelItems = [
-  { code: 11, value: 'Agriculture, Forestry, Fishing and Hunting' },
-  { code: 21, value: 'Mining, Quarrying, and Oil and Gas Extraction' },
-  { code: 22, value: 'Utilities' },
-  { code: 23, value: 'Construction' },
-  { code: '31-33', value: 'Manufacturing' },
-  { code: 42, value: 'Wholesale Trade' },
-  { code: '44-45', value: 'Retail Trade' },
-  { code: '48-49', value: 'Transportation and Warehousing' },
-  { code: 51, value: 'Information' },
-  { code: 52, value: 'Finance and Insurance' },
-  { code: 53, value: 'Real Estate and Rental and Leasing' },
-  { code: 54, value: 'Professional, Scientific, and Technical Services' },
-  { code: 55, value: 'Management of Companies and Enterprises' },
-  { code: 56, value: 'Administrative and Support and Waste Management and Remediation Services' },
-  { code: 61, value: 'Educational Services' },
-  { code: 62, value: 'Health Care and Social Assistance' },
-  { code: 71, value: 'Arts, Entertainment, and Recreation' },
-  { code: 72, value: 'Accommodation and Food Services' },
-  { code: 81, value: 'Other Services (except Public Administration)' },
-  { code: 92, value: 'Public Administration' },
-];
+import useNaicsCodes from './useNaicsCodes';
+import { ChevronLeftIcon } from '@heroicons/react/solid';
+import clsx from 'clsx';
 
-function NaicsPicker() {
+const classes =
+  'flex items-center justify-center p-4 text-center border border-gray-200 rounded-md cursor-pointer h-32 hover:border-blue-800 hover:border-2 overflow-hidden overflow-ellipsis';
+
+const getCodeLevel = (code) => {
+  if (!code || code?.length < 2) {
+    return 'Sector';
+  }
+
+  code = code.toString();
+
+  if (code.length === 2 || code.indexOf('-') > -1) {
+    return 'Sector';
+  }
+
+  switch (code.length) {
+    case 3:
+      return 'Subsector';
+    case 4:
+      return 'Industry Group';
+    case 5:
+      return 'NAICS Industry';
+    case 6:
+      return 'National Industry';
+  }
+};
+
+const history = [];
+
+function NaicsPicker({ updateWith }) {
+  const [code, setCode] = React.useState();
+  const codes = useNaicsCodes(code);
+
+  const back = () => {
+    history.pop();
+    const length = history.length;
+    const index = length - 1;
+
+    if (index > -1) {
+      return setCode(history[index]);
+    }
+
+    setCode();
+  };
+
+  const select = (item) => {
+    if (!history.includes(item.code)) {
+      history.push(item.code);
+    }
+    updateWith(item);
+    setCode(item.code);
+  };
+
   return (
-    <div className="flex flex-wrap">
-      {topLevelItems.map((item) => (
-        <div className="border border-gray-600 rounded-md">{item.value}</div>
-      ))}
-    </div>
+    <>
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+        <div className="flex items-center justify-between flex-1">
+          <div>
+            <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <button
+                className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50"
+                onClick={() => back()}
+                disabled={history.length === 0}
+              >
+                <span className="sr-only">Previous</span>
+                <ChevronLeftIcon className="w-5 h-5" aria-hidden="true" />
+              </button>
+              <span
+                className={clsx(
+                  'relative inline-flex items-center px-4 py-2 text-sm font-medium  bg-white border border-gray-300 hover:bg-gray-50',
+                  code?.toString().length === 6 ? 'text-green-500 font-semibold' : 'text-gray-700'
+                )}
+              >
+                {getCodeLevel(code)}
+              </span>
+              <span
+                className={clsx(
+                  'relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50',
+                  code?.toString().length === 6 ? 'text-green-500 font-semibold' : 'text-gray-700'
+                )}
+              >
+                {code || '?'}
+              </span>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div className="grid items-stretch grid-cols-2 gap-4 overflow-auto sm:grid-cols-3 md:grid-cols-5">
+        {codes?.map((item) => (
+          <div key={item.code + item.value} className={classes} onClick={() => select(item)}>
+            {item.value}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

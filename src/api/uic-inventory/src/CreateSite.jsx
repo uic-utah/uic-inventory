@@ -5,12 +5,18 @@ import TextInput from './components/FormElements/TextInput';
 import SelectInput from './components/FormElements/SelectInput';
 import GridHeading from './components/FormElements/GridHeading';
 import Chrome from './components/PageElements/Chrome';
+import { Dialog, Transition } from '@headlessui/react';
+import NaicsPicker from './components/Naics/NaicsPicker';
 
 const schema = yup.object().shape({
   name: yup.string().max(512).required().label('Name'),
   ownership: yup.string().max(512).required().label('ownership'),
-  naics: yup.string().max(512).required().label('NAICS'),
-  naicsTitle: yup.string().max(512).required().label('title'),
+  naics: yup
+    .string()
+    .test('len', 'Must be exactly 6 characters', (val) => val?.length === 6)
+    .required()
+    .label('NAICS code'),
+  naicsTitle: yup.string().max(512).required().label('NAICS title'),
   activity: yup.string().max(512).required().label('business activity'),
 });
 
@@ -58,9 +64,10 @@ const ownership = [
 ];
 
 function CreateSite() {
-  const { formState, handleSubmit, register } = useForm({
+  const { formState, handleSubmit, register, setValue } = useForm({
     resolver: yupResolver(schema),
   });
+  const [naicsOpen, setNaicsOpen] = React.useState(false);
 
   return (
     <Chrome>
@@ -85,8 +92,20 @@ function CreateSite() {
                     />
                   </div>
 
+                  <div className="col-span-6 text-center">
+                    <button type="button" onClick={() => setNaicsOpen(true)}>
+                      Select NAICs
+                    </button>
+                  </div>
+
                   <div className="col-span-6 sm:col-span-3">
-                    <TextInput id="naics" text="6-digit NAICS code" register={register} errors={formState.errors} />
+                    <TextInput
+                      id="naics"
+                      text="6-digit NAICS code"
+                      register={register}
+                      errors={formState.errors}
+                      disabled={true}
+                    />
                   </div>
 
                   <div className="col-span-6 sm:col-span-3">
@@ -95,6 +114,7 @@ function CreateSite() {
                       text="Corresponding NAICS title"
                       register={register}
                       errors={formState.errors}
+                      disabled={true}
                     />
                   </div>
 
@@ -117,6 +137,60 @@ function CreateSite() {
           </div>
         </div>
       </form>
+      <Transition appear show={naicsOpen} as={React.Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto"
+          open={naicsOpen}
+          onClose={() => setNaicsOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={React.Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+            </Transition.Child>
+
+            <Transition.Child
+              as={React.Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                  NAICS Code Helper
+                </Dialog.Title>
+
+                <NaicsPicker
+                  updateWith={(item) => {
+                    if (item.code.toString().length === 6) {
+                      setNaicsOpen(false);
+                    }
+
+                    console.log(item);
+                    setValue('naics', item.code, { shouldValidate: true, shouldDirty: true });
+                    setValue('naicsTitle', item.value, { shouldValidate: true, shouldDirty: true });
+                  }}
+                />
+
+                <button type="button" className="mt-4" onClick={() => setNaicsOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
     </Chrome>
   );
 }
