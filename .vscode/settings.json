@@ -7,6 +7,7 @@
     "heroicons",
     "hookform",
     "jsonb",
+    "naics",
     "npgsql",
     "oidc",
     "openid",
