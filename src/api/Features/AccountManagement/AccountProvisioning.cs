@@ -76,7 +76,7 @@ namespace api.Features.AccountManagement {
             { "name", $"{account.FirstName} {account.LastName}" }
           },
           Url = $"/account/{account.Id}/profile",
-          NotificationReceipt = recipients
+          NotificationReceipts = recipients
         };
       }
     }
