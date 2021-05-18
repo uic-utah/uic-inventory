@@ -18,7 +18,7 @@
   [multiple],
   textarea,
   select {
-    @apply mt-0 text-gray-500 block w-full px-0.5 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-gray-800;
+    @apply mt-0 text-gray-500 block w-full px-0.5 border-0 border-b-2 border-gray-300 focus:ring-0 focus:border-gray-800 disabled:bg-gray-100;
   }
   [type='checkbox'],
   [type='radio'] {
