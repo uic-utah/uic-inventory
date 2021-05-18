@@ -7,6 +7,11 @@ import GridHeading from './components/FormElements/GridHeading';
 import Chrome from './components/PageElements/Chrome';
 import { Dialog, Transition } from '@headlessui/react';
 import NaicsPicker from './components/Naics/NaicsPicker';
+import { SiteMutation } from './GraphQL';
+import { useMutation } from 'graphql-hooks';
+import { AuthContext } from './AuthProvider';
+import { toast } from 'react-toastify';
+import { useHistory } from 'react-router-dom';
 
 const ownership = [
   {
@@ -52,14 +57,46 @@ const ownership = [
 ];
 
 function CreateSite() {
+  const { authInfo } = React.useContext(AuthContext);
+  const [createSite] = useMutation(SiteMutation);
   const { formState, handleSubmit, register, setValue } = useForm({
     resolver: yupResolver(SiteSchema),
   });
+  const history = useHistory();
   const [naicsOpen, setNaicsOpen] = React.useState(false);
+
+  const create = async (state, formData) => {
+    if (!state.isDirty) {
+      return toast.info("We've got your most current information");
+    }
+
+    const keys = Object.keys(state.dirtyFields);
+    const input = {
+      id: parseInt(authInfo.id),
+    };
+
+    for (let key of keys) {
+      input[key] = formData[key];
+    }
+
+    const { data, error } = await createSite({
+      variables: {
+        input: { ...input },
+      },
+    });
+
+    if (error) {
+      return toast.error('We had some trouble creating the site');
+      // TODO: log error
+    }
+
+    toast.success('Site created successfully!');
+    history.push(`/site/${data.createSite.site.id}/add-contacts`);
+  };
 
   return (
     <Chrome>
-      <form onSubmit={handleSubmit((data) => console.log(data))}>
+      <form onSubmit={handleSubmit((data) => create(formState, data))}>
         <div className="md:grid md:grid-cols-3 md:gap-6">
           <GridHeading text="Site Details" subtext="Provide some basic information about the site" />
           <div className="mt-5 md:mt-0 md:col-span-2">
@@ -80,33 +117,35 @@ function CreateSite() {
                     />
                   </div>
 
-                  <div className="col-span-6 text-center">
-                    <button type="button" onClick={() => setNaicsOpen(true)}>
-                      Select NAICs
+                  <div className="self-center col-span-6 text-center sm:col-span-2 sm:row-span-3">
+                    <button type="button" className="sm:items-center sm:h-24" onClick={() => setNaicsOpen(true)}>
+                      NAICS Code Helper
                     </button>
                   </div>
 
-                  <div className="col-span-6 sm:col-span-3">
+                  <div className="col-span-6 sm:col-span-4">
                     <TextInput
                       id="naics"
                       text="6-digit NAICS code"
                       register={register}
                       errors={formState.errors}
-                      disabled={true}
+                      readOnly={true}
+                      className="bg-gray-100"
                     />
                   </div>
 
-                  <div className="col-span-6 sm:col-span-3">
+                  <div className="col-span-6 sm:col-span-4">
                     <TextInput
                       id="naicsTitle"
                       text="Corresponding NAICS title"
                       register={register}
                       errors={formState.errors}
-                      disabled={true}
+                      readOnly={true}
+                      className="bg-gray-100"
                     />
                   </div>
 
-                  <div className="col-span-12 sm:col-span-6">
+                  <div className="col-span-6 sm:col-span-6">
                     <TextInput
                       id="activity"
                       text="Describe the primary business activity conducted at the site"
@@ -165,7 +204,6 @@ function CreateSite() {
                       setNaicsOpen(false);
                     }
 
-                    console.log(item);
                     setValue('naics', item.code, { shouldValidate: true, shouldDirty: true });
                     setValue('naicsTitle', item.value, { shouldValidate: true, shouldDirty: true });
                   }}
