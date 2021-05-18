@@ -3,7 +3,7 @@ import memCache from 'graphql-hooks-memcache';
 import Navigation from './Navigation';
 import Profile from './Profile';
 import Home from './Home';
-import Contact from './Contact';
+import ContactProgram from './ContactProgram';
 import CreateSite from './CreateSite';
 import AddContacts from './AddContacts';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
@@ -33,7 +33,7 @@ function App() {
           <Navigation />
           <Switch>
             <Route path="/contact">
-              <Contact />
+              <ContactProgram />
             </Route>
             <Route path="/profile">
               <Profile />
