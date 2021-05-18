@@ -17,7 +17,7 @@ namespace api.Features.Naics {
     private readonly int _skipRows = 2;
     private readonly int _currentRow = 0;
 
-    private Dictionary<string, int[]> Exceptions {get;} = new Dictionary<string, int[]> {
+    private Dictionary<string, int[]> Exceptions { get; } = new Dictionary<string, int[]> {
         { "31-33", new[] {31, 33}},
         { "44-45",  new[] { 44, 45 }},
         { "48-49",  new[] { 48, 49 }},
