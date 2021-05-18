@@ -13,7 +13,6 @@ import Chrome from './components/PageElements/Chrome';
 import ErrorMessageTag from './components/FormElements/ErrorMessage';
 import GridHeading from './components/FormElements/GridHeading';
 import PhoneInput from 'react-phone-number-input/react-hook-form-input';
-import Table from './Table';
 import TextInput from './components/FormElements/TextInput';
 import SelectInput from './components/FormElements/SelectInput';
 
@@ -67,6 +66,7 @@ const contactType = [
     label: 'Other',
   },
 ];
+
 function AddContacts() {
   const { siteId } = useParams();
   const [createContact] = useMutation(ContactMutation);
@@ -132,14 +132,12 @@ function AddContacts() {
             subtext="At least one of the contacts listed must be the owner/operator or legal representative of the owner/operator of the injection well system for which the UIC Inventory Information is being submitted. The owner/operator or the legal representative must be the signatory for the form."
           />
           <div className="min-h-screen mt-5 md:mt-0 md:col-span-2">
-            <div className="overflow-hidden sm:rounded-md">
-              {loading && <BulletList style={{ height: '20em' }} />}
-              {(!loading || !error) && <Table contacts={data?.siteById.contacts} />}
-              {error && (
-                <h1>Something went terribly wrong</h1>
-                // Log error
-              )}
-            </div>
+            {loading && <BulletList style={{ height: '20em' }} />}
+            {(!loading || !error) && <ContactsTable data={data?.siteById.contacts} />}
+            {error && (
+              <h1>Something went terribly wrong</h1>
+              // Log error
+            )}
           </div>
         </div>
       </form>
@@ -231,6 +229,86 @@ function AddContacts() {
         </div>
       </form>
     </Chrome>
+  );
+}
+
+function ContactsTable({ data }) {
+  return (
+    <div className="flex flex-col">
+      <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div className="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Organization
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Address
+                  </th>
+                  <th scope="col" className="relative px-6 py-3">
+                    <span className="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data?.length > 0 ? (
+                  data.map((item) => (
+                    <tr key={item.email}>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{`${item.firstName} ${item.lastName}`}</div>
+                        <div className="text-sm text-gray-500">{item.contactType}</div>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{item.email}</div>
+                        <div className="text-sm text-gray-500">{item.phoneNumber}</div>
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="text-sm text-gray-900">{item.organization}</div>
+                      </td>
+                      <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
+                        <div>{item.mailingAddress}</div>
+                        <div>{`${item.city} ${item.state} ${item.zipCode}`} </div>
+                      </td>
+                      <td className="px-3 py-4 text-sm font-medium text-right whitespace-nowrap">
+                        <a href="#" className="text-indigo-600 hover:text-indigo-900">
+                          Edit
+                        </a>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-3 py-4">
+                      <div className="text-sm text-center text-gray-900">No contacts have been added yet</div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
