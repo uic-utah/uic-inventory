@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { SiteSchema } from './Schema';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import TextInput from './components/FormElements/TextInput';
@@ -7,18 +7,6 @@ import GridHeading from './components/FormElements/GridHeading';
 import Chrome from './components/PageElements/Chrome';
 import { Dialog, Transition } from '@headlessui/react';
 import NaicsPicker from './components/Naics/NaicsPicker';
-
-const schema = yup.object().shape({
-  name: yup.string().max(512).required().label('Name'),
-  ownership: yup.string().max(512).required().label('ownership'),
-  naics: yup
-    .string()
-    .test('len', 'Must be exactly 6 characters', (val) => val?.length === 6)
-    .required()
-    .label('NAICS code'),
-  naicsTitle: yup.string().max(512).required().label('NAICS title'),
-  activity: yup.string().max(512).required().label('business activity'),
-});
 
 const ownership = [
   {
@@ -65,7 +53,7 @@ const ownership = [
 
 function CreateSite() {
   const { formState, handleSubmit, register, setValue } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(SiteSchema),
   });
   const [naicsOpen, setNaicsOpen] = React.useState(false);
 
