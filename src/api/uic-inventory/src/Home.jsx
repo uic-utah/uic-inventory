@@ -1,8 +1,10 @@
 import { List } from 'react-content-loader';
 import { AuthContext } from './AuthProvider';
+import { useQuery } from 'graphql-hooks';
 import { Link } from 'react-router-dom';
 import Chrome from './components/PageElements/Chrome';
 import Header from './Header';
+import { SitesQuery } from './GraphQL';
 
 export function Home() {
   const { isAuthenticated, completeProfile } = React.useContext(AuthContext);
@@ -11,6 +13,9 @@ export function Home() {
 }
 
 function SitesAndInventory({ completeProfile }) {
+  const { authInfo } = React.useContext(AuthContext);
+  const siteQuery = useQuery(SitesQuery, { variables: { id: parseInt(authInfo.id) } });
+
   return (
     <main>
       <div className="py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -30,18 +35,10 @@ function SitesAndInventory({ completeProfile }) {
           )}
         </Header>
         <Chrome title="Your sites and inventory">
+          <div className="w-full">
+            <SiteList show={completeProfile()} {...siteQuery} />
+          </div>
           <div className="self-center w-full text-center">
-            {completeProfile() ? (
-              <List animate={false} />
-            ) : (
-              <p>
-                You must complete your{' '}
-                <Link type="primary" to="/profile">
-                  profile
-                </Link>{' '}
-                before submitting sites.
-              </p>
-            )}
             <SiteCreationButton access={!completeProfile()} />
           </div>
         </Chrome>
@@ -73,6 +70,102 @@ function SiteCreationButton({ access, className = 'm-4 text-2xl' }) {
     <Link to="/site/create" type="button" disabled={access} className={className}>
       Add site
     </Link>
+  );
+}
+
+function SiteList({ show, loading, error, data }) {
+  return show ? (
+    loading ? (
+      <List animate={false} />
+    ) : (
+      <SiteTable data={data?.mySites} />
+    )
+  ) : (
+    <p>
+      You must complete your{' '}
+      <Link type="primary" to="/profile">
+        {' '}
+        profile{' '}
+      </Link>{' '}
+      before submitting sites.
+    </p>
+  );
+}
+
+function SiteTable({ data }) {
+  return (
+    <div className="flex flex-col">
+      <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div className="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Id
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Type
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    Status
+                  </th>
+                  <th scope="col" className="relative px-6 py-3">
+                    <span className="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data?.length > 0 ? (
+                  data.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{item.id}</div>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{item.name}</div>
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="text-sm text-gray-900">{item.naicsTitle}</div>
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="text-sm text-gray-900">Incomplete</div>
+                      </td>
+                      <td className="px-3 py-4 text-sm font-medium text-right whitespace-nowrap">
+                        <Link to={`/site/${item.id}/add-contacts`} className="text-indigo-600 hover:text-indigo-900">
+                          Continue
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-3 py-4">
+                      <div className="text-sm text-center text-gray-900">No sites have been created yet</div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
