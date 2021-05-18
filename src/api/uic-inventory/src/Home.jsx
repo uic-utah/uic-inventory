@@ -53,8 +53,16 @@ function SitesAndInventory({ completeProfile }) {
 function GenericLandingPage() {
   return (
     <main>
-      <Chrome title="About the program">
-        <List animate={false} />
+      <Chrome title="Utah UIC Class V Injection Well Inventory">
+        <p>
+          As of dd/mm/yyyy all Class V injection well inventories must be submitted through the online inventory
+          process. To submit, you must first create a Utah ID account, and provide UIC user profile information. Please
+          visit{' '}
+          <a type="Primary" href="https://login.utah.gov">
+            Utah ID
+          </a>{' '}
+          to register, then return to this page to complete your profile; or login using the link in the header above.
+        </p>
       </Chrome>
     </main>
   );
