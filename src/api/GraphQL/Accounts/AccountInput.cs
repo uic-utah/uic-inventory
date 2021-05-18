@@ -15,6 +15,6 @@ namespace api.GraphQL {
     public string? State { get; set; }
     [GraphQLType(typeof(PostalCodeType))] public string? ZipCode { get; set; }
     [Authorize] public bool? ReceiveNotifications { get; set; }
-    [Authorize] public Access? Access { get; set; }
+    [Authorize] public AccessLevels? Access { get; set; }
   }
 }
