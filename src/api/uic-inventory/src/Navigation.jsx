@@ -255,7 +255,19 @@ function Navigation() {
                       </Disclosure.Button>
                     </div>
                   </>
-                ) : null}
+                ) : (
+                  <div className="flex -mr-2 md:hidden">
+                    {/* Mobile menu button */}
+                    <Disclosure.Button className="inline-flex items-center justify-center p-2 text-gray-400 bg-gray-800 rounded-md hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                      <span className="sr-only">Open main menu</span>
+                      {open ? (
+                        <XIcon className="block w-6 h-6" aria-hidden="true" />
+                      ) : (
+                        <MenuIcon className="block w-6 h-6" aria-hidden="true" />
+                      )}
+                    </Disclosure.Button>
+                  </div>
+                )}
               </div>
             </div>
 
