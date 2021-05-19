@@ -9,11 +9,16 @@ WORKDIR /project/src/api
 RUN dotnet build -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish -c Release -o /app -r linux-x64
-# -p:PublishSingleFile=true --self-contained false -p:DebugType=embedded -p:PublishReadyToRun=true
+RUN apt-get clean && apt-get update
+RUN apt-get install -yq curl
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash
+RUN apt-get install -yq nodejs
+RUN npm i -g npm
+
+RUN dotnet publish -c Release -o /app -r linux-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=embedded -p:PublishReadyToRun=true
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-# RUN apt update -y && apt install -y libc-dev
+
 ENTRYPOINT ["dotnet", "api.dll"]
