@@ -3,4 +3,4 @@ cd "$(dirname "$0")/.."
 
 echo 'building image'
 
-docker-compose build --pull api
+docker-compose build --force-rm --pull --progress plain api
