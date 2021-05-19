@@ -4,7 +4,7 @@ import { BellIcon, LinkIcon, MailOpenIcon, MailIcon, MenuIcon, TrashIcon, XIcon 
 import { Disclosure, Menu, Popover, Transition } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import { Facebook } from 'react-content-loader';
-import { AuthContext } from './AuthProvider';
+import { AuthContext } from '../../AuthProvider';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'numeric',

@@ -1,18 +1,9 @@
 import { List } from 'react-content-loader';
-import { AuthContext } from './AuthProvider';
-import { useQuery } from 'graphql-hooks';
-import { Link } from 'react-router-dom';
-import Chrome from './components/PageElements/Chrome';
-import Header from './Header';
-import { SitesQuery } from './GraphQL';
+import { AuthContext } from '../../AuthProvider';
+import { useQuery, SitesQuery } from '../GraphQL';
+import { Chrome, Link, Header } from '../PageElements';
 
-export function Home() {
-  const { isAuthenticated, completeProfile } = React.useContext(AuthContext);
-
-  return isAuthenticated() ? <SitesAndInventory completeProfile={completeProfile} /> : <GenericLandingPage />;
-}
-
-function SitesAndInventory({ completeProfile }) {
+export function SitesAndInventory({ completeProfile }) {
   const { authInfo } = React.useContext(AuthContext);
   const siteQuery = useQuery(SitesQuery, { variables: { id: parseInt(authInfo.id) } });
 
@@ -47,7 +38,7 @@ function SitesAndInventory({ completeProfile }) {
   );
 }
 
-function GenericLandingPage() {
+export function GenericLandingPage() {
   return (
     <main>
       <Chrome title="Utah UIC Class V Injection Well Inventory">
@@ -168,5 +159,3 @@ function SiteTable({ data }) {
     </div>
   );
 }
-
-export default Home;

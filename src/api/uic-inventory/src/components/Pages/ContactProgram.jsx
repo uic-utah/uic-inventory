@@ -1,18 +1,15 @@
-import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import TextInput from './components/FormElements/TextInput';
-import GridHeading from './components/FormElements/GridHeading';
-import Chrome from './components/PageElements/Chrome';
-
-const schema = yup.object().shape({
-  message: yup.string().max(512).required().label('Message'),
-});
+import { GridHeading, TextInput, ContactProgramSchema as schema } from '../FormElements';
+import { Chrome } from '../PageElements';
 
 export function ContactProgram() {
   const { formState, handleSubmit, register } = useForm({
     resolver: yupResolver(schema),
   });
+
+  //! pull isDirty from form state to activate proxy
+  const { isDirty } = formState;
 
   return (
     <main>
@@ -31,7 +28,7 @@ export function ContactProgram() {
                     </div>
                   </div>
                   <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                    <button type="submit" disabled={!formState.isDirty}>
+                    <button type="submit" disabled={!isDirty}>
                       Send
                     </button>
                   </div>

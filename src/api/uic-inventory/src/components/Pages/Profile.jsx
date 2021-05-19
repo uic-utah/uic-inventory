@@ -1,19 +1,18 @@
-import { useQuery, useMutation } from 'graphql-hooks';
+import { useQuery, useMutation, AccountMutation, AccountQuery } from '../GraphQL';
 import { Controller, useForm } from 'react-hook-form';
-import { ErrorMessage } from '@hookform/error-message';
 import { yupResolver } from '@hookform/resolvers/yup';
-import TextInput from './components/FormElements/TextInput';
-import Chrome from './components/PageElements/Chrome';
-import GridHeading from './components/FormElements/GridHeading';
-import ErrorMessageTag from './components/FormElements/ErrorMessage';
-import PhoneInput from 'react-phone-number-input/react-hook-form-input';
+import { Chrome, toast, useParams } from '../PageElements';
 import { Facebook } from 'react-content-loader';
-import { toast } from 'react-toastify';
 import { Switch } from '@headlessui/react';
-import { useParams } from 'react-router-dom';
-import { AuthContext } from './AuthProvider';
-import { ProfileSchema } from './Schema';
-import { AccountMutation, AccountQuery } from './GraphQL';
+import { AuthContext } from '../../AuthProvider';
+import {
+  ErrorMessage,
+  ErrorMessageTag,
+  GridHeading,
+  PhoneInput,
+  ProfileSchema as schema,
+  TextInput,
+} from '../FormElements';
 
 export function Profile() {
   const { id } = useParams();
@@ -21,14 +20,19 @@ export function Profile() {
   const { loading, error, data, refetch } = useQuery(AccountQuery, { variables: { id: parseInt(id || authInfo.id) } });
   const [updateAccount] = useMutation(AccountMutation);
   const { control, formState, handleSubmit, register, reset } = useForm({
-    resolver: yupResolver(ProfileSchema),
+    resolver: yupResolver(schema),
   });
+  //! pull isDirty from form state to activate proxy
+  const { isDirty } = formState;
   const {
+    getValues: notificationValues,
     control: notificationControl,
     handleSubmit: handleNotificationSubmit,
     formState: notificationFormState,
     reset: notificationReset,
   } = useForm({});
+  //! pull isDirty from form state to activate proxy
+  const { isDirty: isNotificationDirty } = notificationFormState;
 
   // fill form fields with existing data
   React.useEffect(() => {
@@ -41,7 +45,7 @@ export function Profile() {
         }
       }
 
-      notificationReset({ receiveNotifications: defaults.receiveNotifications });
+      notificationReset({ ...notificationValues(), receiveNotifications: defaults.receiveNotifications });
 
       //* remove default prop so dirty is accurate
       delete defaults.receiveNotifications;
@@ -51,7 +55,7 @@ export function Profile() {
   }, [data, notificationReset, reset]);
 
   const mutateAccount = async (state, updateDefaultValues, formData) => {
-    if (!state.isDirty) {
+    if (!isDirty) {
       return toast.info("We've got your most current information");
     }
 
@@ -156,7 +160,7 @@ export function Profile() {
                         </div>
                       </div>
                       <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                        <button type="submit" disabled={!formState.isDirty}>
+                        <button type="submit" disabled={!isDirty}>
                           Save
                         </button>
                       </div>
@@ -209,7 +213,7 @@ export function Profile() {
                         </Switch.Group>
                       </div>
                       <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                        <button type="submit" disabled={!notificationFormState.isDirty}>
+                        <button type="submit" disabled={!isNotificationDirty}>
                           Save
                         </button>
                       </div>

@@ -1,17 +1,10 @@
-import { SiteSchema } from './Schema';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import TextInput from './components/FormElements/TextInput';
-import SelectInput from './components/FormElements/SelectInput';
-import GridHeading from './components/FormElements/GridHeading';
-import Chrome from './components/PageElements/Chrome';
 import { Dialog, Transition } from '@headlessui/react';
-import NaicsPicker from './components/Naics/NaicsPicker';
-import { SiteMutation } from './GraphQL';
-import { useMutation } from 'graphql-hooks';
-import { AuthContext } from './AuthProvider';
-import { toast } from 'react-toastify';
-import { useHistory } from 'react-router-dom';
+import { SiteMutation, useMutation } from '../GraphQL';
+import { AuthContext } from '../../AuthProvider';
+import { GridHeading, NaicsPicker, SelectInput, TextInput, SiteSchema as schema } from '../FormElements';
+import { Chrome, toast, useHistory } from '../PageElements';
 
 const ownership = [
   {
@@ -60,13 +53,15 @@ function CreateSite() {
   const { authInfo } = React.useContext(AuthContext);
   const [createSite] = useMutation(SiteMutation);
   const { formState, handleSubmit, register, setValue } = useForm({
-    resolver: yupResolver(SiteSchema),
+    resolver: yupResolver(schema),
   });
+  //! pull isDirty from form state to activate proxy
+  const { isDirty } = formState;
   const history = useHistory();
   const [naicsOpen, setNaicsOpen] = React.useState(false);
 
   const create = async (state, formData) => {
-    if (!state.isDirty) {
+    if (!isDirty) {
       return toast.info("We've got your most current information");
     }
 
@@ -156,7 +151,7 @@ function CreateSite() {
                 </div>
               </div>
               <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                <button type="submit" disabled={!formState.isDirty}>
+                <button type="submit" disabled={!isDirty}>
                   Next
                 </button>
               </div>

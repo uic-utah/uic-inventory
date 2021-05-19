@@ -2,13 +2,26 @@ import ErrorMessageTag from './ErrorMessage';
 import { ErrorMessage } from '@hookform/error-message';
 import { camelToProper } from './Helpers';
 
-function SelectInput({ register, errors, id, text, items, placeholder = '' }) {
+const noop = () => {};
+
+function SelectInput({ register, errors, id, text, items, onUpdate = noop, placeholder = '' }) {
+  const { onChange, onBlur, ref, name } = register(id);
   return (
     <>
       <label htmlFor={id} className="">
         {text || camelToProper(id)}
       </label>
-      <select id={id} {...register(id)} defaultValue="">
+      <select
+        id={id}
+        name={name}
+        ref={ref}
+        onChange={(event) => {
+          onChange(event);
+          onUpdate(event);
+        }}
+        onBlur={onBlur}
+        defaultValue=""
+      >
         <option value="" disabled hidden>
           {placeholder}
         </option>

@@ -1,13 +1,13 @@
 {
   "name": "uic-inventory",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview",
-    "build:dev": "NODE_ENV=development postcss ./src/tailwind.css -o ./src/index.css -w",
+    "css": "NODE_ENV=development postcss ./src/styles/tailwind.css -o ./src/styles/index.css -w",
+    "dev": "vite",
     "format": "prettier --write src --ignore-path ./.gitignore",
-    "lint": "eslint --ext .jsx src"
+    "lint": "eslint --ext .jsx src",
+    "serve": "vite preview"
   },
   "dependencies": {
     "@headlessui/react": "^1.2.0",

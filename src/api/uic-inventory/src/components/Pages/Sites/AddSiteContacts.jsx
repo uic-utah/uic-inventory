@@ -1,20 +1,17 @@
-import { AuthContext } from './AuthProvider';
 import { BulletList } from 'react-content-loader';
-import { ContactMutation } from './GraphQL';
-import { ContactQuery } from './GraphQL';
-import { ContactSchema } from './Schema';
-import { ErrorMessage } from '@hookform/error-message';
-import { toast } from 'react-toastify';
+import { ContactMutation, ContactQuery, useQuery, useMutation } from '../../GraphQL';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
-import { useQuery, useMutation } from 'graphql-hooks';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Chrome from './components/PageElements/Chrome';
-import ErrorMessageTag from './components/FormElements/ErrorMessage';
-import GridHeading from './components/FormElements/GridHeading';
-import PhoneInput from 'react-phone-number-input/react-hook-form-input';
-import TextInput from './components/FormElements/TextInput';
-import SelectInput from './components/FormElements/SelectInput';
+import { Chrome, toast, useParams, Link } from '../../PageElements';
+import {
+  ContactSchema as schema,
+  ErrorMessage,
+  ErrorMessageTag,
+  GridHeading,
+  PhoneInput,
+  SelectInput,
+  TextInput,
+} from '../../FormElements';
 
 const contactType = [
   {
@@ -67,18 +64,27 @@ const contactType = [
   },
 ];
 
-function AddContacts() {
+const valueToLabel = (value) => {
+  const item = contactType.find((x) => x.value === value);
+
+  return item?.label ?? value;
+};
+
+function AddSiteContacts() {
   const { siteId } = useParams();
   const [createContact] = useMutation(ContactMutation);
-  const { control, formState, handleSubmit, register, reset } = useForm({
-    resolver: yupResolver(ContactSchema),
+  const { control, formState, handleSubmit, register, reset, unregister } = useForm({
+    resolver: yupResolver(schema),
   });
   const { loading, error, data, refetch } = useQuery(ContactQuery, { variables: { id: parseInt(siteId) } });
+  const [optional, setOptional] = React.useState(false);
+  //! pull isDirty from form state to activate proxy
+  const { isDirty } = formState;
 
   // set default fields to owner
   React.useEffect(() => {
     if (data?.siteById) {
-      const defaults = data?.siteById.owner;
+      let defaults = data?.siteById.owner;
 
       //! contact already added do not pre-fill
       if (data?.siteById.contacts.find((x) => x.email == defaults.email)) {
@@ -91,12 +97,24 @@ function AddContacts() {
         }
       }
 
+      defaults = { ...defaults, contactType: undefined };
+      console.log(defaults);
+
       reset(defaults);
     }
   }, [data, reset]);
 
-  const create = async (state, formData) => {
-    if (!state.isDirty) {
+  // handle conditional control registration
+  React.useEffect(() => {
+    if (optional) {
+      register('description', { required: true });
+    } else {
+      unregister('description');
+    }
+  }, [optional]);
+
+  const create = async (formData) => {
+    if (!isDirty) {
       return toast.info("We've got your most current information");
     }
 
@@ -121,27 +139,35 @@ function AddContacts() {
 
     refetch();
     toast.success('Contact created successfully!');
+    reset({});
   };
 
   return (
     <Chrome loading={loading}>
-      <form onSubmit={handleSubmit((data) => create(formState, data))}>
-        <div className="md:grid md:grid-cols-3 md:gap-6">
-          <GridHeading
-            text="Site Contacts"
-            subtext="At least one of the contacts listed must be the owner/operator or legal representative of the owner/operator of the injection well system for which the UIC Inventory Information is being submitted. The owner/operator or the legal representative must be the signatory for the form."
-          />
-          <div className="min-h-screen mt-5 md:mt-0 md:col-span-2">
-            {loading && <BulletList style={{ height: '20em' }} />}
-            {(!loading || !error) && <ContactsTable data={data?.siteById.contacts} />}
-            {error && (
-              <h1>Something went terribly wrong</h1>
-              // Log error
-            )}
-          </div>
+      <div className="md:grid md:grid-cols-3 md:gap-6">
+        <GridHeading
+          text="Site Contacts"
+          subtext="At least one of the contacts listed must be the owner/operator or legal representative of the owner/operator of the injection well system for which the UIC Inventory Information is being submitted. The owner/operator or the legal representative must be the signatory for the form."
+        />
+        <div className="min-h-screen mt-5 md:mt-0 md:col-span-2">
+          {loading && <BulletList style={{ height: '20em' }} />}
+          {!loading && !error && (
+            <>
+              <ContactsTable data={data?.siteById.contacts} />
+              <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
+                <Link type="button" to={`/site/${siteId}/add-location`}>
+                  Next
+                </Link>
+              </div>
+            </>
+          )}
+          {error && (
+            <h1>Something went terribly wrong</h1>
+            // Log error
+          )}
         </div>
-      </form>
-      <form onSubmit={handleSubmit((data) => create(formState, data))} className="mt-10 sm:mt-0">
+      </div>
+      <form onSubmit={handleSubmit(create)} className="mt-10 sm:mt-0">
         <div className="hidden sm:block" aria-hidden="true">
           <div className="py-5">
             <div className="border-t border-gray-200" />
@@ -186,7 +212,7 @@ function AddContacts() {
                       control={control}
                       rules={{ required: true }}
                     />
-                    <ErrorMessage errors={formState.errors} name="phoneNumber" as={ErrorMessageTag} />
+                    <ErrorMessage name="phoneNumber" errors={formState.errors} as={ErrorMessageTag} />
                   </div>
 
                   <div className="col-span-3">
@@ -194,12 +220,20 @@ function AddContacts() {
                   </div>
 
                   <div className="col-span-3">
-                    <SelectInput id="contactType" items={contactType} register={register} errors={formState.errors} />
+                    <SelectInput
+                      id="contactType"
+                      items={contactType}
+                      register={register}
+                      errors={formState.errors}
+                      onUpdate={(event) => setOptional(event.target.value?.toLowerCase() === 'other')}
+                    />
                   </div>
 
-                  <div className="col-span-6">
-                    <TextInput id="description" register={register} errors={formState.errors} />
-                  </div>
+                  {optional ? (
+                    <div className="col-span-6">
+                      <TextInput id="description" register={register} errors={formState.errors} />
+                    </div>
+                  ) : null}
 
                   <div className="col-span-6">
                     <TextInput
@@ -221,8 +255,10 @@ function AddContacts() {
                   <div className="col-span-6 sm:col-span-3 lg:col-span-2">
                     <TextInput id="zipCode" text="ZIP" register={register} errors={formState.errors} />
                   </div>
-                  <button type="submit">Add</button>
                 </div>
+              </div>
+              <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
+                <button type="submit">Add</button>
               </div>
             </div>
           </div>
@@ -237,7 +273,7 @@ function ContactsTable({ data }) {
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-          <div className="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+          <div className="overflow-hidden border border-b-0 border-gray-200 shadow sm:rounded-t-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -273,10 +309,10 @@ function ContactsTable({ data }) {
               <tbody className="bg-white divide-y divide-gray-200">
                 {data?.length > 0 ? (
                   data.map((item) => (
-                    <tr key={item.email}>
+                    <tr key={item.id}>
                       <td className="px-3 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{`${item.firstName} ${item.lastName}`}</div>
-                        <div className="text-sm text-gray-500">{item.contactType}</div>
+                        <div className="text-sm text-gray-500">{valueToLabel(item.contactType)}</div>
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{item.email}</div>
@@ -290,9 +326,7 @@ function ContactsTable({ data }) {
                         <div>{`${item.city} ${item.state} ${item.zipCode}`} </div>
                       </td>
                       <td className="px-3 py-4 text-sm font-medium text-right whitespace-nowrap">
-                        <a href="#" className="text-indigo-600 hover:text-indigo-900">
-                          Edit
-                        </a>
+                        <span className="text-indigo-600 hover:text-indigo-900">Edit</span>
                       </td>
                     </tr>
                   ))
@@ -312,4 +346,4 @@ function ContactsTable({ data }) {
   );
 }
 
-export default AddContacts;
+export default AddSiteContacts;

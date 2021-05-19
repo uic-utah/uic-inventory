@@ -1,3 +1,14 @@
+export const MeQuery = `query {
+  me {
+    id
+    firstName
+    lastName
+    access
+    receiveNotifications
+    profileComplete
+  }
+}`;
+
 export const AccountMutation = `mutation updateAccount($input: AccountInput!) {
   updateAccount(input: $input) {
     account {
@@ -37,6 +48,7 @@ export const ContactQuery = `query SiteById($id: Int!) {
       zipCode
     }
     contacts {
+      id
       firstName
       lastName
       email
