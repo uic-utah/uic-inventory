@@ -9,3 +9,5 @@ docker-compose.*.yml
 */bin
 */obj
 */node_modules
+spa.proxy.json
+appsettings.Development.json
