@@ -37,6 +37,11 @@
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Add naics supporting data to build output -->
+    <Content Include="Features\Naics\data\*" CopyToPublishDirectory="Always" />
+  </ItemGroup>
+
   <Target Name="PostClean" AfterTargets="Clean">
     <!-- Delete the bin and obj filders when running dotnet clean -->
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" /><!-- obj -->
