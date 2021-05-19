@@ -88,7 +88,7 @@ CREATE TABLE public.sites (
   account_fk integer NOT NULL,
 
   CONSTRAINT site_primary_key PRIMARY KEY (id),
-  CONSTRAINT site_to_account_fk FOREIGN KEY (account_fk) REFERENCES public.accounts(id),
+  CONSTRAINT site_to_account_fk FOREIGN KEY (account_fk) REFERENCES public.accounts(id)
 );
 
 ALTER TABLE public.sites OWNER TO postgres;
@@ -111,7 +111,7 @@ CREATE TABLE public.contacts (
   contact_type contact_types DEFAULT 'other' :: contact_types,
   site_fk integer NOT NULL,
   CONSTRAINT contacts_primary_key PRIMARY KEY (id),
-  CONSTRAINT contact_to_site_fk FOREIGN KEY (site_fk) REFERENCES public.site(id),
+  CONSTRAINT contact_to_site_fk FOREIGN KEY (site_fk) REFERENCES public.sites(id)
 );
 
 ALTER TABLE public.contacts OWNER TO postgres;
