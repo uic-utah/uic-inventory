@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using api.Features.Naics;
 using api.Infrastructure;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 namespace api {
@@ -76,7 +78,12 @@ namespace api {
 
       app.UseForwardedHeaders();
 
-      app.UseStaticFiles();
+      app.UseStaticFiles(new StaticFileOptions {
+        OnPrepareResponse = ctx => {
+          ctx.Context.Response.Headers.Append(
+               "Cache-Control", $"public, max-age={604800}");
+        }
+      });
 
       app.UseRouting();
 
