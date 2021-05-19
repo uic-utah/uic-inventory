@@ -15,7 +15,7 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash
 RUN apt-get install -yq nodejs
 RUN npm i -g npm
 
-RUN dotnet publish -c Release -o /app -r linux-x64 -p:PublishSingleFile=true --self-contained false -p:DebugType=embedded -p:PublishReadyToRun=true
+RUN dotnet publish -c Release -o /app -r linux-x64 -p:PublishSingleFile=true --no-self-contained -p:DebugType=embedded -p:PublishReadyToRun=true
 
 FROM base AS final
 WORKDIR /app
