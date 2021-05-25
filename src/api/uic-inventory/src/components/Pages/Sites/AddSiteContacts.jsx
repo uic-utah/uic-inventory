@@ -7,8 +7,11 @@ import {
   ContactSchema as schema,
   ErrorMessage,
   ErrorMessageTag,
-  GridHeading,
+  FormGrid,
+  PageGrid,
   PhoneInput,
+  ResponsiveGridColumn,
+  Separator,
   SelectInput,
   TextInput,
 } from '../../FormElements';
@@ -144,11 +147,10 @@ function AddSiteContacts() {
 
   return (
     <Chrome loading={loading}>
-      <div className="md:grid md:grid-cols-3 md:gap-6">
-        <GridHeading
-          text="Site Contacts"
-          subtext="At least one of the contacts listed must be the owner/operator or legal representative of the owner/operator of the injection well system for which the UIC Inventory Information is being submitted. The owner/operator or the legal representative must be the signatory for the form."
-        />
+      <PageGrid
+        heading="Site Contacts"
+        subtext="At least one of the contacts listed must be the owner/operator or legal representative of the owner/operator of the injection well system for which the UIC Inventory Information is being submitted. The owner/operator or the legal representative must be the signatory for the form."
+      >
         <div className="min-h-screen mt-5 md:mt-0 md:col-span-2">
           {loading && <BulletList style={{ height: '20em' }} />}
           {!loading && !error && (
@@ -166,103 +168,75 @@ function AddSiteContacts() {
             // Log error
           )}
         </div>
-      </div>
+      </PageGrid>
+
+      <Separator />
+
       <form onSubmit={handleSubmit(create)} className="mt-10 sm:mt-0">
-        <div className="hidden sm:block" aria-hidden="true">
-          <div className="py-5">
-            <div className="border-t border-gray-200" />
-          </div>
-        </div>
+        <PageGrid
+          subtext="Provide additional contacts capable of providing reliable information regarding the operation of the facility."
+          submit={true}
+          submitLabel="Add"
+          disabled={!isDirty}
+        >
+          <FormGrid>
+            <ResponsiveGridColumn full={true} half={true}>
+              <TextInput id="firstName" control={control} register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-        <div className="md:grid md:grid-cols-3 md:gap-6">
-          <GridHeading
-            text=""
-            subtext="Provide additional contacts capable of providing reliable information regarding the operation of the facility."
-          />
-          <div className="mt-5 md:mt-0 md:col-span-2">
-            <div className="overflow-hidden shadow sm:rounded-md">
-              <div className="px-4 py-5 bg-white sm:p-6">
-                <div className="grid grid-cols-6 gap-6">
-                  <div className="col-span-6 sm:col-span-3">
-                    <TextInput id="firstName" control={control} register={register} errors={formState.errors} />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <TextInput id="lastName" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-3">
-                    <TextInput id="lastName" register={register} errors={formState.errors} />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <TextInput id="email" type="email" text="Email address" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-3">
-                    <TextInput
-                      id="email"
-                      type="email"
-                      text="Email address"
-                      register={register}
-                      errors={formState.errors}
-                    />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <label htmlFor="phoneNumber" className="block font-medium text-gray-700">
+                Phone number
+              </label>
+              <PhoneInput name="phoneNumber" type="tel" country="US" control={control} rules={{ required: true }} />
+              <ErrorMessage name="phoneNumber" errors={formState.errors} as={ErrorMessageTag} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-3">
-                    <label htmlFor="phoneNumber" className="block font-medium text-gray-700">
-                      Phone number
-                    </label>
-                    <PhoneInput
-                      name="phoneNumber"
-                      type="tel"
-                      country="US"
-                      control={control}
-                      rules={{ required: true }}
-                    />
-                    <ErrorMessage name="phoneNumber" errors={formState.errors} as={ErrorMessageTag} />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <TextInput id="organization" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-3">
-                    <TextInput id="organization" register={register} errors={formState.errors} />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <SelectInput
+                id="contactType"
+                items={contactType}
+                register={register}
+                errors={formState.errors}
+                onUpdate={(event) => setOptional(event.target.value?.toLowerCase() === 'other')}
+              />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-3">
-                    <SelectInput
-                      id="contactType"
-                      items={contactType}
-                      register={register}
-                      errors={formState.errors}
-                      onUpdate={(event) => setOptional(event.target.value?.toLowerCase() === 'other')}
-                    />
-                  </div>
+            {optional ? (
+              <ResponsiveGridColumn full={true}>
+                <TextInput id="description" register={register} errors={formState.errors} />
+              </ResponsiveGridColumn>
+            ) : null}
 
-                  {optional ? (
-                    <div className="col-span-6">
-                      <TextInput id="description" register={register} errors={formState.errors} />
-                    </div>
-                  ) : null}
+            <ResponsiveGridColumn full={true}>
+              <TextInput id="mailingAddress" text="Street address" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6">
-                    <TextInput
-                      id="mailingAddress"
-                      text="Street address"
-                      register={register}
-                      errors={formState.errors}
-                    />
-                  </div>
+            <ResponsiveGridColumn full={true} third={true}>
+              <TextInput id="city" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-6 lg:col-span-2">
-                    <TextInput id="city" register={register} errors={formState.errors} />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true} third={true}>
+              <TextInput id="state" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-3 lg:col-span-2">
-                    <TextInput id="state" register={register} errors={formState.errors} />
-                  </div>
-
-                  <div className="col-span-6 sm:col-span-3 lg:col-span-2">
-                    <TextInput id="zipCode" text="ZIP" register={register} errors={formState.errors} />
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                <button type="submit">Add</button>
-              </div>
-            </div>
-          </div>
-        </div>
+            <ResponsiveGridColumn full={true} half={true} third={true}>
+              <TextInput id="zipCode" text="ZIP" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
+          </FormGrid>
+        </PageGrid>
       </form>
     </Chrome>
   );

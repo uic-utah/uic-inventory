@@ -6,6 +6,9 @@ import PhoneInput from 'react-phone-number-input/react-hook-form-input';
 import NaicsPicker from '../Naics/NaicsPicker';
 
 export * from './validationSchemas';
+export * from './ResponsiveGridColumn';
+export * from './Grid';
+export * from './Separator';
 
 export { camelToProper } from './Helpers';
 export { ErrorMessage } from '@hookform/error-message';
