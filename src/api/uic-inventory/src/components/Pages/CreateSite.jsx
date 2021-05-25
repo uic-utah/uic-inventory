@@ -3,7 +3,15 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Dialog, Transition } from '@headlessui/react';
 import { SiteMutation, useMutation } from '../GraphQL';
 import { AuthContext } from '../../AuthProvider';
-import { GridHeading, NaicsPicker, SelectInput, TextInput, SiteSchema as schema } from '../FormElements';
+import {
+  FormGrid,
+  NaicsPicker,
+  PageGrid,
+  ResponsiveGridColumn,
+  TextInput,
+  SelectInput,
+  SiteSchema as schema,
+} from '../FormElements';
 import { Chrome, toast, useHistory } from '../PageElements';
 
 const ownership = [
@@ -92,72 +100,66 @@ function CreateSite() {
   return (
     <Chrome>
       <form onSubmit={handleSubmit((data) => create(formState, data))}>
-        <div className="md:grid md:grid-cols-3 md:gap-6">
-          <GridHeading text="Site Details" subtext="Provide some basic information about the site" />
-          <div className="mt-5 md:mt-0 md:col-span-2">
-            <div className="overflow-hidden shadow sm:rounded-md">
-              <div className="px-4 py-5 bg-white sm:p-6">
-                <div className="grid grid-cols-6 gap-6">
-                  <div className="col-span-6 sm:col-span-3">
-                    <TextInput id="name" register={register} errors={formState.errors} />
-                  </div>
+        <PageGrid
+          heading="Site Details"
+          subtext="Provide some basic information about the site"
+          submit={true}
+          submitLabel="Next"
+          disabled={!isDirty}
+        >
+          <FormGrid>
+            <ResponsiveGridColumn full={true} half={true}>
+              <TextInput id="name" register={register} errors={formState.errors} />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-3">
-                    <SelectInput
-                      id="ownership"
-                      text="Land ownership at site"
-                      items={ownership}
-                      register={register}
-                      errors={formState.errors}
-                    />
-                  </div>
+            <ResponsiveGridColumn full={true} half={true}>
+              <SelectInput
+                id="ownership"
+                text="Land ownership at site"
+                items={ownership}
+                register={register}
+                errors={formState.errors}
+              />
+            </ResponsiveGridColumn>
 
-                  <div className="self-center col-span-6 text-center sm:col-span-2 sm:row-span-3">
-                    <button type="button" className="sm:items-center sm:h-24" onClick={() => setNaicsOpen(true)}>
-                      NAICS Code Helper
-                    </button>
-                  </div>
+            <ResponsiveGridColumn full={true} className="self-center text-center sm:col-span-2 sm:row-span-3">
+              <button type="button" className="sm:items-center sm:h-24" onClick={() => setNaicsOpen(true)}>
+                NAICS Code Helper
+              </button>
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-4">
-                    <TextInput
-                      id="naics"
-                      text="6-digit NAICS code"
-                      register={register}
-                      errors={formState.errors}
-                      readOnly={true}
-                      className="bg-gray-100"
-                    />
-                  </div>
+            <ResponsiveGridColumn full={true} className="sm:col-span-4">
+              <TextInput
+                id="naics"
+                text="6-digit NAICS code"
+                register={register}
+                errors={formState.errors}
+                readOnly={true}
+                className="bg-gray-100"
+              />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-4">
-                    <TextInput
-                      id="naicsTitle"
-                      text="Corresponding NAICS title"
-                      register={register}
-                      errors={formState.errors}
-                      readOnly={true}
-                      className="bg-gray-100"
-                    />
-                  </div>
+            <ResponsiveGridColumn full={true} className="sm:col-span-4">
+              <TextInput
+                id="naicsTitle"
+                text="Corresponding NAICS title"
+                register={register}
+                errors={formState.errors}
+                readOnly={true}
+                className="bg-gray-100"
+              />
+            </ResponsiveGridColumn>
 
-                  <div className="col-span-6 sm:col-span-6">
-                    <TextInput
-                      id="activity"
-                      text="Describe the primary business activity conducted at the site"
-                      register={register}
-                      errors={formState.errors}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                <button type="submit" disabled={!isDirty}>
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+            <ResponsiveGridColumn full={true}>
+              <TextInput
+                id="activity"
+                text="Describe the primary business activity conducted at the site"
+                register={register}
+                errors={formState.errors}
+              />
+            </ResponsiveGridColumn>
+          </FormGrid>
+        </PageGrid>
       </form>
       <Transition appear show={naicsOpen} as={React.Fragment}>
         <Dialog
