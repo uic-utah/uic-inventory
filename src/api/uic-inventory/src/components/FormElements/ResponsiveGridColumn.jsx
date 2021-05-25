@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 
-export function ResponsiveGridColumn({ full, half, third, children }) {
-  const classes = clsx({
+export function ResponsiveGridColumn({ full, half, third, className, children }) {
+  const classes = clsx(className, {
     'col-span-6': full,
     'sm:col-span-3': half,
     'lg:col-span-2': third,
