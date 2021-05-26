@@ -55,7 +55,7 @@ export function Profile() {
 
       reset(defaults);
     }
-  }, [data, notificationReset, reset]);
+  }, [data, notificationReset, reset, notificationValues]);
 
   const mutateAccount = async (state, updateDefaultValues, formData) => {
     if (!isDirty) {

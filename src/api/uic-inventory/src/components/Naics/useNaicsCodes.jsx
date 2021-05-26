@@ -24,18 +24,18 @@ const topLevelItems = [
 function useNaicsCodes(naicsCode) {
   const [codes, setCodes] = React.useState();
 
-  const fetchCodes = async () => {
-    const response = await fetch(`/api/naics/${naicsCode}`, {
-      method: 'GET',
-    });
-
-    setCodes(await response.json());
-  };
-
   React.useEffect(() => {
     if (!naicsCode) {
       return setCodes(topLevelItems);
     }
+
+    const fetchCodes = async () => {
+      const response = await fetch(`/api/naics/${naicsCode}`, {
+        method: 'GET',
+      });
+
+      setCodes(await response.json());
+    };
 
     fetchCodes();
   }, [naicsCode]);

@@ -25,6 +25,8 @@ const getCodeLevel = (code) => {
       return 'NAICS Industry';
     case 6:
       return 'National Industry';
+    default:
+      return 'Sector';
   }
 };
 

@@ -90,7 +90,7 @@ function AddSiteContacts() {
       let defaults = data?.siteById.owner;
 
       //! contact already added do not pre-fill
-      if (data?.siteById.contacts.find((x) => x.email == defaults.email)) {
+      if (data?.siteById.contacts.find((x) => x.email === defaults.email)) {
         return;
       }
 
@@ -114,7 +114,7 @@ function AddSiteContacts() {
     } else {
       unregister('description');
     }
-  }, [optional]);
+  }, [optional, register, unregister]);
 
   const create = async (formData) => {
     if (!isDirty) {
