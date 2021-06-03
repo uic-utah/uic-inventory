@@ -5,9 +5,7 @@ import { camelToProper } from './Helpers';
 function TextInput({ className, register, errors, id, text, type, readOnly = false }) {
   return (
     <>
-      <label htmlFor={id} className="block font-medium text-gray-700">
-        {text || camelToProper(id)}
-      </label>
+      <Label id={id} text={text} />
       <input
         type={type || 'text'}
         id={id}
@@ -21,5 +19,11 @@ function TextInput({ className, register, errors, id, text, type, readOnly = fal
     </>
   );
 }
+
+export const Label = ({ id, text }) => (
+  <label htmlFor={id} className="block font-medium text-gray-700">
+    {text || camelToProper(id)}
+  </label>
+);
 
 export default TextInput;
