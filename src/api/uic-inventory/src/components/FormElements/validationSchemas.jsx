@@ -80,3 +80,13 @@ export const ContactSchema = yup.object().shape({
 export const ContactProgramSchema = yup.object().shape({
   message: yup.string().max(512).required().label('Message'),
 });
+
+export const SiteLocationSchema = yup.object().shape({
+  address: yup.string().max(512).required('A site address or a point location is required').label('Address'),
+  geometry: yup
+    .object()
+    .nullable()
+    .pick(['geometry'])
+    .required('A site geometry must be selected or created')
+    .label('Site location'),
+});
