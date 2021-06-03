@@ -1,6 +1,6 @@
 import '@arcgis/core/assets/esri/themes/light/main.css';
 import { Chrome, PolygonIcon, OkNotToggle, PointIcon, SelectPolygonIcon } from '../../PageElements';
-import { FormGrid, GridHeading, Label, ResponsiveGridColumn, SiteLocationSchema as schema } from '../../FormElements';
+import { GridHeading, Label, SiteLocationSchema as schema } from '../../FormElements';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import MapView from '@arcgis/core/views/MapView';
