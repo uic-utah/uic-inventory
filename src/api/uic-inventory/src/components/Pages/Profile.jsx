@@ -16,10 +16,11 @@ import {
   Separator,
   TextInput,
 } from '../FormElements';
+import { useContext, useEffect } from 'react';
 
 export function Profile() {
   const { id } = useParams();
-  const { authInfo } = React.useContext(AuthContext);
+  const { authInfo } = useContext(AuthContext);
   const { loading, error, data, refetch } = useQuery(AccountQuery, { variables: { id: parseInt(id || authInfo.id) } });
   const [updateAccount] = useMutation(AccountMutation);
   const { control, formState, handleSubmit, register, reset } = useForm({
@@ -38,7 +39,7 @@ export function Profile() {
   const { isDirty: isNotificationDirty } = notificationFormState;
 
   // fill form fields with existing data
-  React.useEffect(() => {
+  useEffect(() => {
     if (data?.accountById) {
       const defaults = data?.accountById;
 

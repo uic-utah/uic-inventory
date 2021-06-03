@@ -5,6 +5,7 @@ import { Disclosure, Menu, Popover, Transition } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import { Facebook } from 'react-content-loader';
 import { AuthContext } from '../../AuthProvider';
+import { Fragment, useContext, useEffect } from 'react';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'numeric',
@@ -66,7 +67,7 @@ const getInitials = (account) => {
 };
 
 function Navigation() {
-  const { authInfo, isAuthenticated, receiveNotifications } = React.useContext(AuthContext);
+  const { authInfo, isAuthenticated, receiveNotifications } = useContext(AuthContext);
 
   const [fetchNotifications, { loading, error, data, refetch }] = useManualQuery(NOTIFICATION_QUERY, {
     variables: {
@@ -74,7 +75,7 @@ function Navigation() {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (authInfo?.id) {
       return fetchNotifications();
     }
@@ -156,7 +157,7 @@ function Navigation() {
                                 </Popover.Button>
                                 <Transition
                                   show={open}
-                                  as={React.Fragment}
+                                  as={Fragment}
                                   enter="transition ease-out duration-100"
                                   enterFrom="transform opacity-0 scale-95"
                                   enterTo="transform opacity-100 scale-100"
@@ -195,7 +196,7 @@ function Navigation() {
                               </div>
                               <Transition
                                 show={open}
-                                as={React.Fragment}
+                                as={Fragment}
                                 enter="transition ease-out duration-100"
                                 enterFrom="transform opacity-0 scale-95"
                                 enterTo="transform opacity-100 scale-100"

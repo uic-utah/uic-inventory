@@ -15,6 +15,7 @@ import {
   SelectInput,
   TextInput,
 } from '../../FormElements';
+import { useEffect, useState } from 'react';
 
 const contactType = [
   {
@@ -80,12 +81,12 @@ function AddSiteContacts() {
     resolver: yupResolver(schema),
   });
   const { loading, error, data, refetch } = useQuery(ContactQuery, { variables: { id: parseInt(siteId) } });
-  const [optional, setOptional] = React.useState(false);
+  const [optional, setOptional] = useState(false);
   //! pull isDirty from form state to activate proxy
   const { isDirty } = formState;
 
   // set default fields to owner
-  React.useEffect(() => {
+  useEffect(() => {
     if (data?.siteById) {
       let defaults = data?.siteById.owner;
 
@@ -108,7 +109,7 @@ function AddSiteContacts() {
   }, [data, reset]);
 
   // handle conditional control registration
-  React.useEffect(() => {
+  useEffect(() => {
     if (optional) {
       register('description', { required: true });
     } else {

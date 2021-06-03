@@ -13,6 +13,7 @@ import {
   SiteSchema as schema,
 } from '../FormElements';
 import { Chrome, toast, useHistory } from '../PageElements';
+import { Fragment, useContext, useState } from 'react';
 
 const ownership = [
   {
@@ -58,7 +59,7 @@ const ownership = [
 ];
 
 function CreateSite() {
-  const { authInfo } = React.useContext(AuthContext);
+  const { authInfo } = useContext(AuthContext);
   const [createSite] = useMutation(SiteMutation);
   const { formState, handleSubmit, register, setValue } = useForm({
     resolver: yupResolver(schema),
@@ -66,7 +67,7 @@ function CreateSite() {
   //! pull isDirty from form state to activate proxy
   const { isDirty } = formState;
   const history = useHistory();
-  const [naicsOpen, setNaicsOpen] = React.useState(false);
+  const [naicsOpen, setNaicsOpen] = useState(false);
 
   const create = async (state, formData) => {
     if (!isDirty) {
@@ -161,7 +162,7 @@ function CreateSite() {
           </FormGrid>
         </PageGrid>
       </form>
-      <Transition appear show={naicsOpen} as={React.Fragment}>
+      <Transition appear show={naicsOpen} as={Fragment}>
         <Dialog
           as="div"
           className="fixed inset-0 z-10 overflow-y-auto"
@@ -170,7 +171,7 @@ function CreateSite() {
         >
           <div className="min-h-screen px-4 text-center">
             <Transition.Child
-              as={React.Fragment}
+              as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0"
               enterTo="opacity-100"
@@ -182,7 +183,7 @@ function CreateSite() {
             </Transition.Child>
 
             <Transition.Child
-              as={React.Fragment}
+              as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"

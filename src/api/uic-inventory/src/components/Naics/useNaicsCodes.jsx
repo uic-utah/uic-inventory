@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 const topLevelItems = [
   { code: 11, value: 'Agriculture, Forestry, Fishing and Hunting' },
   { code: 21, value: 'Mining, Quarrying, and Oil and Gas Extraction' },
@@ -22,9 +24,9 @@ const topLevelItems = [
 ];
 
 function useNaicsCodes(naicsCode) {
-  const [codes, setCodes] = React.useState();
+  const [codes, setCodes] = useState();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!naicsCode) {
       return setCodes(topLevelItems);
     }

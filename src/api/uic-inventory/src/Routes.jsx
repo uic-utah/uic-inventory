@@ -1,6 +1,7 @@
 import { Navigation, Route, Router, Switch, ToastContainer } from './components/PageElements';
 import { CreateSite, ContactProgram, Profile, Sites, GenericLandingPage, SitesAndInventory } from './components/Pages';
 import { AuthContext } from './AuthProvider';
+import { useContext } from 'react';
 
 const contextClass = {
   success: 'bg-green-400',
@@ -12,7 +13,7 @@ const contextClass = {
 };
 
 function Routes() {
-  const { isAuthenticated, completeProfile } = React.useContext(AuthContext);
+  const { isAuthenticated, completeProfile } = useContext(AuthContext);
 
   return (
     <Router>

@@ -2,9 +2,10 @@ import { List } from 'react-content-loader';
 import { AuthContext } from '../../AuthProvider';
 import { useQuery, SitesQuery } from '../GraphQL';
 import { Chrome, Link, Header } from '../PageElements';
+import { useContext } from 'react';
 
 export function SitesAndInventory({ completeProfile }) {
-  const { authInfo } = React.useContext(AuthContext);
+  const { authInfo } = useContext(AuthContext);
   const siteQuery = useQuery(SitesQuery, { variables: { id: parseInt(authInfo.id) } });
 
   return (

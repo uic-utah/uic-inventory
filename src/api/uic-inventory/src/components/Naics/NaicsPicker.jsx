@@ -1,6 +1,7 @@
 import useNaicsCodes from './useNaicsCodes';
 import { ChevronLeftIcon } from '@heroicons/react/solid';
 import clsx from 'clsx';
+import { useState } from 'react';
 
 const classes =
   'flex items-center justify-center p-4 text-center border border-gray-200 rounded-md cursor-pointer h-32 hover:border-blue-800 hover:border-2 overflow-hidden overflow-ellipsis';
@@ -33,7 +34,7 @@ const getCodeLevel = (code) => {
 const history = [];
 
 function NaicsPicker({ updateWith }) {
-  const [code, setCode] = React.useState();
+  const [code, setCode] = useState();
   const codes = useNaicsCodes(code);
 
   const back = () => {
