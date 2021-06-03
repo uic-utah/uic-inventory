@@ -7,7 +7,7 @@ import MapView from '@arcgis/core/views/MapView';
 import WebMap from '@arcgis/core/WebMap';
 import Graphic from '@arcgis/core/Graphic';
 import Polygon from '@arcgis/core/geometry/Polygon';
-import ViewPoint from '@arcgis/core/ViewPoint';
+import Viewpoint from '@arcgis/core/Viewpoint';
 import { TailwindDartboard } from '../../Dartboard/Dartboard';
 import { useRef, useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -103,7 +103,7 @@ function AddSiteLocation() {
       setAddress(true);
 
       if (mapView.current.scale > 10489.34) {
-        mapView.current.goTo(new ViewPoint({ targetGeometry: event.mapPoint, scale: 10480 }));
+        mapView.current.goTo(new Viewpoint({ targetGeometry: event.mapPoint, scale: 10480 }));
       }
     });
 
@@ -230,7 +230,7 @@ function AddSiteLocation() {
     setAddress(true);
 
     setGraphic(new Graphic(result));
-    setViewPoint(new ViewPoint({ targetGeometry: result.geometry, scale: 1500 }));
+    setViewPoint(new Viewpoint({ targetGeometry: result.geometry, scale: 1500 }));
   };
 
   const geocodeError = () => {
