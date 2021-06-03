@@ -48,13 +48,13 @@
     <RemoveDir Directories="$(BaseOutputPath)" /><!-- bin -->
   </Target>
 
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+  <!-- <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+   As part of publishing, ensure the JS resources are freshly built in production mode
     <Exec Command="npm install" WorkingDirectory="$(SpaRoot)" />
     <Exec Command="npm rebuild esbuild" WorkingDirectory="$(SpaRoot)" />
     <Exec Command="npm run build" WorkingDirectory="$(SpaRoot)" />
 
-    <!-- Include the newly-built files in the publish output -->
+    Include the newly-built files in the publish output
     <ItemGroup>
       <DistFiles Include="$(SpaRoot)dist\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
@@ -63,6 +63,6 @@
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       </ResolvedFileToPublish>
     </ItemGroup>
-  </Target>
+  </Target> -->
 
 </Project>
