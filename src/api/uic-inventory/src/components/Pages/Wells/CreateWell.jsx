@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Dialog, Transition, RadioGroup } from '@headlessui/react';
-import { SiteMutation, useMutation } from './../../GraphQL';
+import { SiteQuery, useQuery } from './../../GraphQL';
 import { AuthContext } from './../../../AuthProvider';
 import {
   ErrorMessageTag,
@@ -11,8 +11,8 @@ import {
   TextInput,
   WellSchema as schema,
 } from './../../FormElements';
-import { Chrome, toast, useHistory } from './../../PageElements';
-import { Fragment, useContext, useState } from 'react';
+import { Chrome, toast, useParams, useHistory } from './../../PageElements';
+import { Fragment, useContext, useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { ErrorMessage } from '@hookform/error-message';
 
@@ -45,14 +45,21 @@ const wellTypes = [
 function CreateWell() {
   const [selected, setSelected] = useState(wellTypes[0]);
   const { authInfo } = useContext(AuthContext);
-  const [createSite] = useMutation(SiteMutation);
-  const { formState, handleSubmit, register } = useForm({
+  const { siteId } = useParams();
+  const { data, error, loading, refetch } = useQuery(SiteQuery, { variables: { id: parseInt(siteId) } });
+  const { formState, handleSubmit, register, reset } = useForm({
     resolver: yupResolver(schema),
   });
   //! pull isDirty from form state to activate proxy
   const { isDirty } = formState;
   const history = useHistory();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (data?.siteById) {
+      reset(data.siteById);
+    }
+  }, [data, reset]);
 
   const create = async (formData) => {
     if (!isDirty) {
