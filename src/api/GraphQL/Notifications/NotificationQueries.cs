@@ -3,16 +3,11 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using api.Infrastructure;
-using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
-using HotChocolate.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace api.GraphQL {
-  [Authorize]
-  [ExtendObjectType("Query")]
   public class NotificationQueries {
     private readonly IHttpContextAccessor _accessor;
     private readonly ILogger _log;
@@ -22,9 +17,7 @@ namespace api.GraphQL {
       _log = log;
     }
 
-    [UseApplicationDbContext]
-    // [UseProjection]
-    public Task<List<NotificationPayload>> GetNotifications([ScopedService] AppDbContext context,
+    public Task<List<NotificationPayload>> GetNotifications(AppDbContext context,
       int id) {
 
       if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {

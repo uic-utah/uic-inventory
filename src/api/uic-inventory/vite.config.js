@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [reactRefresh(), reactJsx()],
   server: {
     proxy: {
-      '/graphql': 'http://localhost:5000/graphql',
       '/api': {
         target: 'https://localhost:5001/',
         changeOrigin: true,

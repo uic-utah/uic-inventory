@@ -1,13 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using api.Infrastructure;
-using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
-using HotChocolate.Types;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.GraphQL {
   public class Account {
@@ -25,7 +17,6 @@ namespace api.GraphQL {
     public bool? ReceiveNotifications { get; set; }
     public bool ProfileComplete { get; set; }
     public AccessLevels Access { get; set; }
-    [GraphQLIgnore]
     public ICollection<NotificationReceipt>? NotificationReceipts { get; set; } = new HashSet<NotificationReceipt>();
     public ICollection<Site>? Sites { get; set; } = new HashSet<Site>();
   }
@@ -35,43 +26,19 @@ namespace api.GraphQL {
     elevated
   }
 
-  public class AccountType : ObjectType<Account> {
-    protected override void Configure(IObjectTypeDescriptor<Account> descriptor) => descriptor
-        .Field(f => f.NotificationReceipts)
-        .ResolveWith<NotificationResolver>(resolver => resolver.GetNotificationsAsync(default!, default!, default!, default))
-        .UseDbContext<AppDbContext>()
-        .Name("notifications");
-
-    private class NotificationResolver {
-      public async Task<IEnumerable<NotificationPayload>> GetNotificationsAsync(
-        Account account,
-        [ScopedService] AppDbContext context,
-        NotificationByIdDataLoader notificationById,
-        CancellationToken cancellationToken) {
-        var notificationIds = await context.Accounts
-          .Where(a => a.Id == account.Id)
-          .Include(a => a.NotificationReceipts)
-          .SelectMany(a => a.NotificationReceipts.Select(receipt => receipt.Id))
-          .ToArrayAsync(cancellationToken: cancellationToken);
-
-        return await notificationById.LoadAsync(notificationIds, cancellationToken);
-      }
-    }
-  }
-
   public class AccountInput {
     public int Id { get; set; }
     public string? Organization { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
-    [GraphQLType(typeof(EmailAddressType))] public string? Email { get; set; }
-    [GraphQLType(typeof(PhoneNumberType))] public string? PhoneNumber { get; set; }
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
     public string? MailingAddress { get; set; }
     public string? City { get; set; }
     public string? State { get; set; }
-    [GraphQLType(typeof(PostalCodeType))] public string? ZipCode { get; set; }
-    [Authorize] public bool? ReceiveNotifications { get; set; }
-    [Authorize] public AccessLevels? Access { get; set; }
+    public string? ZipCode { get; set; }
+    public bool? ReceiveNotifications { get; set; }
+    public AccessLevels? Access { get; set; }
   }
 
   public static class AccountInputExtension {

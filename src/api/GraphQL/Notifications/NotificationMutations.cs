@@ -3,19 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
-using HotChocolate;
-using HotChocolate.Data;
-using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.GraphQL {
-  [ExtendObjectType("Mutation")]
   public class NotificationMutations {
-    [UseDbContext(typeof(AppDbContext))]
-    public async Task<NotificationMutationResponse> UpdateNotification(
-      NotificationInput input,
-      [ScopedService] AppDbContext context,
-      CancellationToken token) {
+    public async Task<NotificationMutationResponse> UpdateNotification( NotificationInput input, AppDbContext context, CancellationToken token) {
       var receipt = await context.NotificationReceipts.FirstOrDefaultAsync(x => x.Id == input.Id, token);
 
       if (receipt is null) {

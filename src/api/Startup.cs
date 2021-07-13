@@ -59,8 +59,6 @@ namespace api {
           policy => policy.RequireAuthenticatedUser());
       });
 
-      services.AddGraphQL(Env);
-
       services.AddSingleton(new Lazy<NaicsProvider>(() => new NaicsProvider()));
 
       services.Configure<ForwardedHeadersOptions>(options => {
@@ -117,8 +115,6 @@ namespace api {
           context.Response.Headers["Cache-Control"] = new("max-age=2592000");
           await context.Response.WriteAsJsonAsync(naicsProvider.Value.GetCodesFor(naicsCode));
         });
-
-        endpoints.MapGraphQL();
 
         endpoints.MapFallbackToFile("index.html");
       });

@@ -4,15 +4,11 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
-using HotChocolate;
-using HotChocolate.Data;
-using HotChocolate.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace api.GraphQL {
-  [ExtendObjectType("Query")]
   public class SiteQueries {
     private readonly IHttpContextAccessor _accessor;
     private readonly ILogger _log;
@@ -22,12 +18,10 @@ namespace api.GraphQL {
       _log = log;
     }
 
-    [UseDbContext(typeof(AppDbContext))]
-    public IQueryable<Site> GetSites([ScopedService] AppDbContext context)
+    public IQueryable<Site> GetSites( AppDbContext context)
       => context.Sites;
 
-    [UseDbContext(typeof(AppDbContext))]
-    public async Task<Site> GetSiteById(int id, [ScopedService] AppDbContext context, CancellationToken token) {
+    public async Task<Site> GetSiteById(int id,  AppDbContext context, CancellationToken token) {
       if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {
         _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
            .Warning("User is missing name identifier claim");
@@ -52,8 +46,7 @@ namespace api.GraphQL {
     }
 
 
-    [UseDbContext(typeof(AppDbContext))]
-    public async Task<IEnumerable<Site>> MySites([ScopedService] AppDbContext context, CancellationToken token) {
+    public async Task<IEnumerable<Site>> MySites(AppDbContext context, CancellationToken token) {
       if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {
         _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
            .Warning("User is missing name identifier claim");

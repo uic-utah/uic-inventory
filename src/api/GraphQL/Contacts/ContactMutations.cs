@@ -1,17 +1,11 @@
 using System;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using api.Exceptions;
 using api.Infrastructure;
-using HotChocolate;
-using HotChocolate.Types;
 
 namespace api.GraphQL {
-  [ExtendObjectType("Mutation")]
   public class ContactMutations {
-    [UseApplicationDbContext]
-    public async Task<ContactPayload> CreateContactAsync([ScopedService] AppDbContext context,
+    public async Task<ContactPayload> CreateContactAsync(AppDbContext context,
       ContactInput input) {
       var contact = await context.Contacts.AddAsync(input.Update(new()));
 
