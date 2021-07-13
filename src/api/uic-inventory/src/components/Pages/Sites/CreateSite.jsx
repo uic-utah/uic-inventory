@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Dialog, Transition } from '@headlessui/react';
-import { SiteMutation, useMutation } from '../../GraphQL';
 import { AuthContext } from '../../../AuthProvider';
 import {
   FormGrid,

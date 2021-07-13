@@ -1,4 +1,3 @@
-import { useQuery, MeQuery } from './components/GraphQL';
 import { createContext, useEffect, useState } from 'react';
 
 export const AuthContext = createContext();

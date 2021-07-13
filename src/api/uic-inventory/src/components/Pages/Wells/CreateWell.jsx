@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Dialog, Transition, RadioGroup } from '@headlessui/react';
-import { SiteQuery, useQuery } from './../../GraphQL';
 import { AuthContext } from './../../../AuthProvider';
 import {
   ErrorMessageTag,

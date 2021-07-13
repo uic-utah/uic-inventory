@@ -23,7 +23,6 @@ import clsx from 'clsx';
 import { PinSymbol, PolygonSymbol } from '../../MapElements/MarkerSymbols';
 import { enablePolygonDrawing } from '../../MapElements/Drawing';
 import { AuthContext } from '../../../AuthProvider';
-import { SiteLocationMutation, useMutation } from '../../GraphQL';
 
 function AddSiteLocation() {
   const { authInfo } = useContext(AuthContext);

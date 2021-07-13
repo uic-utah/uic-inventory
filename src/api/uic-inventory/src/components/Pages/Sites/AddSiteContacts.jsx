@@ -1,5 +1,4 @@
 import { BulletList } from 'react-content-loader';
-import { ContactMutation, ContactQuery, useQuery, useMutation } from '../../GraphQL';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Chrome, toast, useParams, Link } from '../../PageElements';

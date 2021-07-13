@@ -1,6 +1,5 @@
 import { List } from 'react-content-loader';
 import { AuthContext } from '../../AuthProvider';
-import { useQuery, SitesQuery } from '../GraphQL';
 import { Chrome, Link, Header } from '../PageElements';
 import { useContext } from 'react';
 
