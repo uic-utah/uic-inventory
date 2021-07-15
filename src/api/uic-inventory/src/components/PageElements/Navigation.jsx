@@ -65,16 +65,8 @@ function Navigation() {
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <img
-                      className="hidden w-auto h-12 sm:block"
-                      src="https://deq.utah.gov/wp-content/themes/deq/assets/images/branding/Logo-Utah-DEQ-Water-Quality-Secondary-White.svg"
-                      alt="Workflow"
-                    />
-                    <img
-                      className="w-auto h-12 sm:hidden"
-                      src="https://deq.utah.gov/wp-content/themes/deq/assets/images/branding/Logo-Utah-DEQ-Water-Quality.svg"
-                      alt="Workflow"
-                    />
+                    <img className="hidden w-auto h-12 sm:block" src="/logo-alternate.svg" alt="Workflow" />
+                    <img className="w-auto h-12 sm:hidden" src="/logo.svg" alt="Workflow" />
                   </div>
                   <div className="hidden md:block">
                     <div className="flex items-baseline ml-10 space-x-4">
