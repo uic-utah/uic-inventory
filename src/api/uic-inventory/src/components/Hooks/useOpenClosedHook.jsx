@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 
-function useOpenClosed() {
+export function useOpenClosed() {
   const [state, setState] = useState(false);
 
   const handlers = useMemo(
@@ -20,5 +20,3 @@ function useOpenClosed() {
 
   return [state, handlers];
 }
-
-export default useOpenClosed;

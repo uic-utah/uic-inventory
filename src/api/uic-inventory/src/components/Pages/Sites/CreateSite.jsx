@@ -15,7 +15,7 @@ import { Chrome, toast, useHistory } from '../../PageElements';
 import { Fragment, useContext } from 'react';
 import { useMutation } from 'react-query';
 import ky from 'ky';
-import useOpenClosed from '../../Hooks/useOpenClosed';
+import { useOpenClosed } from '../../Hooks';
 
 const ownership = [
   {

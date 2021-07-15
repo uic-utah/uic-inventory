@@ -12,8 +12,6 @@ import {
 import { GridHeading, Label, SiteLocationSchema as schema } from '../../FormElements';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import MapView from '@arcgis/core/views/MapView';
-import WebMap from '@arcgis/core/WebMap';
 import Graphic from '@arcgis/core/Graphic';
 import Polygon from '@arcgis/core/geometry/Polygon';
 import Viewpoint from '@arcgis/core/Viewpoint';
@@ -23,63 +21,84 @@ import clsx from 'clsx';
 import { PinSymbol, PolygonSymbol } from '../../MapElements/MarkerSymbols';
 import { enablePolygonDrawing } from '../../MapElements/Drawing';
 import { AuthContext } from '../../../AuthProvider';
+import { useWebMap, useViewPointZooming, useGraphicManager } from '../../Hooks';
+import { useQuery, useMutation } from 'react-query';
+import ky from 'ky';
 
 function AddSiteLocation() {
   const { authInfo } = useContext(AuthContext);
   const { siteId } = useParams();
-  const [addLocation] = useMutation(SiteLocationMutation);
   const history = useHistory();
   const mapDiv = useRef(null);
-  const webMap = useRef(null);
-  const mapView = useRef(null);
   const pointAddressClickEvent = useRef(null);
   const parcelClickEvent = useRef(null);
   const siteDrawingEvents = useRef(null);
-  const [viewPoint, setViewPoint] = useState(null);
-  const [graphic, setGraphic] = useState(null);
   const [geocodeSuccess, setGeocodeSuccess] = useState(undefined);
   const [address, setAddress] = useState(false);
   const [siteGeometry, setSiteGeometry] = useState(false);
   const [pointAddressClickEnabled, setPointAddressClickEnabled] = useState(false);
   const [parcelClickEnabled, setParcelClickEnabled] = useState(false);
   const [siteDrawingEnabled, setSiteDrawingEnabled] = useState(false);
-  const { handleSubmit, setValue } = useForm({
+  const { status, data } = useQuery(['site', siteId], () => ky.get(`/api/site/${siteId}`).json(), {
+    enabled: siteId > 0,
+  });
+  const { mutate } = useMutation((input) => ky.put('/api/site', { json: input }).json(), {
+    onSuccess: () => {
+      toast.success('Location added successfully!');
+      history.push(`/site/${siteId}/add-well`);
+    },
+    onError: (error) => {
+      // TODO: log error
+      console.error(error);
+
+      return toast.error('We had some trouble adding the location');
+    },
+  });
+  const { formState, handleSubmit, setValue } = useForm({
     resolver: yupResolver(schema),
   });
 
-  // set up map effect
-  useEffect(() => {
-    if (mapDiv.current) {
-      webMap.current = new WebMap({
-        portalItem: {
-          id: '80c26c2104694bbab7408a4db4ed3382',
-        },
-      });
+  //* pull isDirty from form state to activate proxy
+  const { isDirty } = formState;
 
-      mapView.current = new MapView({
-        container: mapDiv.current,
-        map: webMap.current,
-      });
-    }
-
-    return () => {
-      mapView.current.destroy();
-      webMap.current.destroy();
-    };
-  }, []);
-
+  const { mapView } = useWebMap(mapDiv, '80c26c2104694bbab7408a4db4ed3382');
   // zoom map on geocode
-  useEffect(() => {
-    if (viewPoint) {
-      mapView.current.goTo(viewPoint).catch(console.error);
-    }
-  }, [viewPoint]);
-
+  const { setViewPoint } = useViewPointZooming(mapView);
   // manage graphics
+  const { setGraphic } = useGraphicManager(mapView);
+
   useEffect(() => {
-    mapView.current.graphics.removeAll();
-    mapView.current.graphics.add(graphic);
-  }, [graphic]);
+    if (status !== 'success') {
+      return;
+    }
+
+    if (data.geometry) {
+      setSiteGeometry(data.geometry);
+      setValue('geometry', data.geometry);
+
+      const shape = JSON.parse(data.geometry);
+      const geometry = new Polygon({
+        type: 'polygon',
+        rings: shape.rings,
+        spatialReference: shape.spatialReference,
+      });
+
+      setGraphic(
+        new Graphic({
+          geometry: geometry,
+          attributes: {},
+          symbol: PolygonSymbol,
+        })
+      );
+
+      setViewPoint(new Viewpoint({ targetGeometry: geometry.centroid, scale: 1500 }));
+    }
+
+    if (data.address) {
+      setAddress(data.address);
+      setValue('address', data.address);
+    }
+  }, [data, status, setGraphic, setViewPoint, setValue]);
 
   // activate point clicking for selecting an address
   useEffect(() => {
@@ -125,7 +144,7 @@ function AddSiteLocation() {
       pointAddressClickEvent.current?.remove();
       pointAddressClickEvent.current = null;
     };
-  }, [geocodeSuccess, pointAddressClickEnabled, setValue]);
+  }, [geocodeSuccess, pointAddressClickEnabled, setValue, mapView, setGraphic]);
 
   // activate parcel hit test clicking
   useEffect(() => {
@@ -176,7 +195,7 @@ function AddSiteLocation() {
       parcelClickEvent.current?.remove();
       parcelClickEvent.current = null;
     };
-  }, [parcelClickEnabled, pointAddressClickEnabled, setValue]);
+  }, [parcelClickEnabled, pointAddressClickEnabled, setValue, mapView, setGraphic]);
 
   // activate polygon site drawing
   useEffect(() => {
@@ -222,17 +241,7 @@ function AddSiteLocation() {
     });
 
     siteDrawingEvents.current = [drawingEvent, finishEvent];
-
-    // return () => {
-    //   for (let index = 0; index < siteDrawingEvents.current?.length; index++) {
-    //     const event = siteDrawingEvents.current[index];
-
-    //     event.remove();
-    //   }
-
-    //   siteDrawingEvents.current = null;
-    // };
-  }, [siteDrawingEnabled, setValue]);
+  }, [siteDrawingEnabled, setValue, mapView]);
 
   const geocode = (result) => {
     if (!result) {
@@ -248,17 +257,21 @@ function AddSiteLocation() {
   };
 
   const geocodeError = () => {
-    mapView.current.graphics.remove(graphic);
+    setGraphic(null);
 
     setGeocodeSuccess(false);
     setViewPoint(null);
-    mapView.current.graphics.removeAll();
 
     setValue('address', null);
     setAddress(false);
   };
 
   const addSiteLocation = async (formData) => {
+    if (!isDirty) {
+      history.push(`/site/${siteId}/add-well`);
+      return toast.info("We've got your most current information");
+    }
+
     const input = {
       id: parseInt(authInfo.id),
       siteId: parseInt(siteId),
@@ -266,19 +279,7 @@ function AddSiteLocation() {
       geometry: JSON.stringify(formData.geometry),
     };
 
-    const { data, error } = await addLocation({
-      variables: {
-        input: input,
-      },
-    });
-
-    if (error) {
-      return toast.error('We had some trouble adding the location');
-      // TODO: log error
-    }
-
-    toast.success('Location added successfully!');
-    history.push(`/site/${siteId}/add-well`);
+    await mutate(input);
   };
 
   return (
@@ -286,7 +287,13 @@ function AddSiteLocation() {
       <Chrome>
         <div className="md:grid md:grid-cols-3 md:gap-6">
           <GridHeading text="Site Location" subtext="Set the address and polygon for your site">
-            <p className="mb-3">First, find your site location by it's address.</p>
+            <p className="mb-3">
+              First, find your site location by it&apos;s address. If you don&apos;t have an address{' '}
+              <button type="primary" onClick={() => setGeocodeSuccess(false)}>
+                skip
+              </button>{' '}
+              this step.
+            </p>
             <div
               className={clsx('px-4 py-5 ml-4 border rounded transition hover:opacity-100', {
                 'opacity-25': address,

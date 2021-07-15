@@ -7,7 +7,7 @@ import { useQuery } from 'react-query';
 
 export function SitesAndInventory({ completeProfile }) {
   const { authInfo } = useContext(AuthContext);
-  const siteQuery = useQuery('site', () => ky(`/api/user/${parseInt(authInfo.id)}/sites`, { method: 'get' }).json(), {
+  const siteQuery = useQuery('sites', () => ky(`/api/user/${parseInt(authInfo.id)}/sites`, { method: 'get' }).json(), {
     enabled: authInfo?.id ? true : false,
   });
 
@@ -50,7 +50,7 @@ export function GenericLandingPage() {
           As of August 15, 2021 all Class V injection well inventory information forms must be submitted via online web
           form. To submit, you must first create a Utah ID account and provide UIC user profile information. Please
           visit{' '}
-          <a type="Primary" href="https://login.utah.gov">
+          <a type="primary" href="/api/login">
             Utah ID
           </a>{' '}
           to register with Utah ID and then return to this page to login and complete your profile. If you already have

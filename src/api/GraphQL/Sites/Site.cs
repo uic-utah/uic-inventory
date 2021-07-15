@@ -54,7 +54,7 @@ namespace api.GraphQL {
     }
   }
 
-  public class SitePayload : Payload{
+  public class SitePayload : Payload {
     public SitePayload(Site site) {
       Site = site;
     }
