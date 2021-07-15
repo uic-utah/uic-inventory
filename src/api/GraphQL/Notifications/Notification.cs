@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace api.GraphQL {
   public class Notification {
@@ -57,7 +58,7 @@ namespace api.GraphQL {
     }
 
     public int Id { get; set; }
-    public NotificationTypes NotificationType { get; set; }
+    [JsonPropertyName("event")] public NotificationTypes NotificationType { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Url { get; set; }
     public IDictionary<string, object> AdditionalData { get; set; }

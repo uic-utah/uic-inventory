@@ -3,17 +3,29 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.GraphQL {
-  public class NotificationMutations {
-    public async Task<NotificationMutationResponse> UpdateNotification( NotificationInput input, AppDbContext context, CancellationToken token) {
-      var receipt = await context.NotificationReceipts.FirstOrDefaultAsync(x => x.Id == input.Id, token);
+  [ApiController]
+  public class NotificationMutations : ControllerBase {
+    private readonly AppDbContext _context;
+
+    public NotificationMutations(AppDbContext context) {
+      _context = context;
+    }
+
+    [HttpPut("/api/notification")]
+    [Authorize]
+    public async Task<ActionResult> UpdateNotification([FromBody] NotificationInput input) {
+      //! TODO check if the user owns the notification
+      var receipt = await _context.NotificationReceipts.FirstOrDefaultAsync(x => x.Id == input.Id);
 
       if (receipt is null) {
-        return new NotificationMutationResponse(new[] {
+        return NotFound(new NotificationMutationResponse(new[] {
           new UserError("Notification not found", "MISSING_NOTIFICATION")
-        });
+        }));
       }
 
       var now = DateTime.Now;
@@ -30,17 +42,19 @@ namespace api.GraphQL {
         }
       }
 
-      await context.SaveChangesAsync(token);
+      await _context.SaveChangesAsync();
 
-      return new NotificationMutationResponse(receipt.ReadAt, receipt.DeletedAt);
+      return Accepted(new NotificationMutationResponse(receipt));
     }
   }
 
   public class NotificationMutationResponse : Payload {
-    public NotificationMutationResponse(DateTime? read, DateTime? deletedAt) {
-      ReadAt = read;
-      Read = read.HasValue;
-      DeletedAt = deletedAt;
+    public NotificationMutationResponse(NotificationReceipt receipt) {
+      ReadAt = receipt.ReadAt;
+      Read = receipt.ReadAt.HasValue;
+      DeletedAt = receipt.DeletedAt;
+      Deleted = receipt.DeletedAt.HasValue;
+      Id = receipt.Id;
     }
 
     public NotificationMutationResponse(IReadOnlyList<UserError> errors)
@@ -48,6 +62,8 @@ namespace api.GraphQL {
     }
 
     public bool Read { get; set; }
+    public bool Deleted { get; set; }
+    public int Id { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime? DeletedAt { get; set; }
   }

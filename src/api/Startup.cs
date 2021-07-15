@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using api.Features.Naics;
 using api.Infrastructure;
@@ -59,6 +61,12 @@ namespace api {
           policy => policy.RequireAuthenticatedUser());
       });
 
+      services.AddControllers().AddJsonOptions(options => {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+      });
+
       services.AddSingleton(new Lazy<NaicsProvider>(() => new NaicsProvider()));
 
       services.Configure<ForwardedHeadersOptions>(options => {
@@ -115,6 +123,8 @@ namespace api {
           context.Response.Headers["Cache-Control"] = new("max-age=2592000");
           await context.Response.WriteAsJsonAsync(naicsProvider.Value.GetCodesFor(naicsCode));
         });
+
+        endpoints.MapControllers();
 
         endpoints.MapFallbackToFile("index.html");
       });

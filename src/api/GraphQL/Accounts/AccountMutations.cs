@@ -1,28 +1,38 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using api.Exceptions;
 using api.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api.GraphQL {
-  public class AccountMutations {
-    public async Task<AccountPayload> UpdateAccountAsync(AppDbContext context, AccountInput input) {
+  [ApiController]
+  public class AccountMutations : ControllerBase {
+    private readonly AppDbContext _context;
+
+    public AccountMutations(AppDbContext context) {
+      _context = context;
+    }
+
+    [HttpPut("/api/account")]
+    [Authorize]
+    public async Task<ActionResult> UpdateAccountAsync(AccountInput input) {
       Account account;
       try {
-        account = context.Accounts.Single(account => account.Id == input.Id);
-      } catch (ArgumentNullException ex) {
-        throw new AccountNotFoundException(input.Id.ToString(), ex);
+        account = _context.Accounts.Single(account => account.Id == input.Id);
+      } catch (ArgumentNullException) {
+        return NotFound(input.Id.ToString());
       }
 
       account = input.UpdateAccount(account);
 
       try {
-        await context.SaveChangesAsync();
-      } catch (Exception ex) {
-        throw new AccountNotFoundException(input.Id.ToString(), ex);
+        await _context.SaveChangesAsync();
+      } catch (Exception) {
+        return Problem(input.Id.ToString());
       }
 
-      return new AccountPayload(account);
+      return Accepted(new AccountPayload(account));
     }
   }
 }

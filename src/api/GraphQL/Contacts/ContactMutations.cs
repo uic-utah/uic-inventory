@@ -2,20 +2,35 @@ using System;
 using System.Threading.Tasks;
 using api.Exceptions;
 using api.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace api.GraphQL {
-  public class ContactMutations {
-    public async Task<ContactPayload> CreateContactAsync(AppDbContext context,
-      ContactInput input) {
-      var contact = await context.Contacts.AddAsync(input.Update(new()));
+  [ApiController]
+  public class ContactMutations : ControllerBase {
+    private readonly AppDbContext _context;
+    private readonly ILogger _log;
+
+    public ContactMutations(AppDbContext context, ILogger log) {
+      _context = context;
+      _log = log;
+    }
+
+    [HttpPost("/api/contact")]
+    [Authorize]
+    public async Task<ActionResult> CreateContactAsync(ContactInput input) {
+      var contact = await _context.Contacts.AddAsync(input.Update(new()));
 
       try {
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
       } catch (Exception ex) {
-        throw new AccountNotFoundException(input.Id.ToString(), ex);
+        _log.Error(ex, "Error saving contact");
+
+        return NotFound(input.Id.ToString());
       }
 
-      return new ContactPayload(contact.Entity);
+      return Created("/api/site", new ContactPayload(contact.Entity));
     }
   }
 }
