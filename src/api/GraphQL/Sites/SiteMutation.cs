@@ -1,9 +1,11 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Exceptions;
 using api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -12,16 +14,34 @@ namespace api.GraphQL {
   [ApiController]
   public class SiteMutations : ControllerBase {
     private readonly AppDbContext _context;
+    private readonly IHttpContextAccessor _accessor;
     private readonly ILogger _log;
+    private readonly IHasOwnership _ownershipResolver;
 
-    public SiteMutations(AppDbContext context, ILogger log) {
+    public SiteMutations(AppDbContext context, IHttpContextAccessor accessor, IHasOwnership ownershipResolver, ILogger log) {
       _context = context;
+      _accessor = accessor;
       _log = log;
+      _ownershipResolver = ownershipResolver;
     }
 
     [HttpPost("/api/site")]
     [Authorize]
     public async Task<ActionResult> CreateSiteAsync(SiteInput input, CancellationToken token) {
+      var (hasAccount, statusCode, account, message) =
+        await _ownershipResolver.HasAccountAsync(_accessor, token);
+
+      _log.ForContext("hasAccount", hasAccount)
+          .ForContext("input", input)
+          .ForContext("account", account)
+          .ForContext("verb", "POST")
+          .ForContext("message", message)
+          .Debug("/api/site");
+
+      if (!hasAccount || statusCode != HttpStatusCode.OK || account is null) {
+        return StatusCode((int)statusCode, message);
+      }
+
       var site = await _context.Sites.AddAsync(input.Update(new()), token);
 
       try {
@@ -37,17 +57,23 @@ namespace api.GraphQL {
 
     [HttpPut("/api/site")]
     [Authorize]
-    public async Task<SitePayload> AddLocationAsync(SiteLocationInput input, CancellationToken token) {
-      var item = await _context.Sites.FirstOrDefaultAsync(x => x.Id == input.Id, token);
+    public async Task<ActionResult> AddLocationAsync(SiteLocationInput input, CancellationToken token) {
+      var (hasAccount, statusCode, account, site, message) =
+        await _ownershipResolver.HasSiteOwnershipAsync(_accessor, input.SiteId, token);
 
-      if (item is null) {
-        return new SitePayload(new[] {
-          new UserError("Site not found", "MISSING_SITE")
-        });
+      _log.ForContext("hasAccount", hasAccount)
+          .ForContext("input", input)
+          .ForContext("account", account)
+          .ForContext("verb", "PUT")
+          .ForContext("message", message)
+          .Debug("/api/site");
+
+      if (!hasAccount || statusCode != HttpStatusCode.OK || account is null || site is null) {
+        return StatusCode((int)statusCode, message);
       }
 
-      item.Address = input.Address;
-      item.Geometry = input.Geometry;
+      site.Address = input.Address;
+      site.Geometry = input.Geometry;
 
       try {
         await _context.SaveChangesAsync(token);
@@ -55,7 +81,7 @@ namespace api.GraphQL {
         throw new AccountNotFoundException(input.Id.ToString(), ex);
       }
 
-      return new SitePayload(item);
+      return Ok(new SitePayload(site));
     }
   }
 }

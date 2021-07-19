@@ -76,7 +76,10 @@ namespace api {
       });
     }
 
-    public void ConfigureContainer(ContainerBuilder builder) => builder.AddComputationMediator();
+    public void ConfigureContainer(ContainerBuilder builder) {
+      builder.RegisterType<OwnershipResolver>().As<IHasOwnership>();
+      builder.AddComputationMediator();
+    }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
       var redirectUrl = "/";

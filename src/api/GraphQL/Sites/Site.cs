@@ -63,6 +63,6 @@ namespace api.GraphQL {
         : base(errors) {
     }
 
-    public Site Site { get; }
+    public Site? Site { get; }
   }
 }

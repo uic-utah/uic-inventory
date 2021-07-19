@@ -1,31 +1,53 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace api.GraphQL {
   [ApiController]
   public class NotificationMutations : ControllerBase {
+    private readonly IHttpContextAccessor _accessor;
+    private readonly ILogger _log;
     private readonly AppDbContext _context;
+    private readonly IHasOwnership _ownershipResolver;
 
-    public NotificationMutations(AppDbContext context) {
+    public NotificationMutations(
+      AppDbContext context,
+      IHasOwnership ownershipResolver,
+      IHttpContextAccessor accessor,
+      ILogger log) {
       _context = context;
+      _ownershipResolver = ownershipResolver;
+      _accessor = accessor;
+      _log = log;
     }
 
     [HttpPut("/api/notification")]
     [Authorize]
-    public async Task<ActionResult> UpdateNotification([FromBody] NotificationInput input) {
-      //! TODO check if the user owns the notification
-      var receipt = await _context.NotificationReceipts.FirstOrDefaultAsync(x => x.Id == input.Id);
+    public async Task<ActionResult> UpdateNotification([FromBody] NotificationInput input, CancellationToken token) {
+      var (hasOwnership, statusCode, account, receipt, message) =
+        await _ownershipResolver.HasNotificationOwnershipAsync(_accessor, input.Id, token);
 
-      if (receipt is null) {
-        return NotFound(new NotificationMutationResponse(new[] {
-          new UserError("Notification not found", "MISSING_NOTIFICATION")
-        }));
+      _log.ForContext("hasOwnership", hasOwnership)
+          .ForContext("input", input)
+          .ForContext("account", account)
+          .ForContext("message", message)
+          .Debug("/api/notification");
+
+      if (!hasOwnership || statusCode != HttpStatusCode.OK || account is null || receipt is null) {
+        if (statusCode == HttpStatusCode.NotFound) {
+          return NotFound(new NotificationMutationResponse(new[] {
+            new UserError(message, "MISSING_NOTIFICATION")
+          }));
+        }
+
+        return StatusCode((int)statusCode, message);
       }
 
       var now = DateTime.Now;
@@ -42,7 +64,7 @@ namespace api.GraphQL {
         }
       }
 
-      await _context.SaveChangesAsync();
+      await _context.SaveChangesAsync(token);
 
       return Accepted(new NotificationMutationResponse(receipt));
     }

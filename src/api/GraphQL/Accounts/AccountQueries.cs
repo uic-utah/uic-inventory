@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,40 +17,60 @@ namespace api.GraphQL {
     private readonly ILogger _log;
 
     private readonly AppDbContext _context;
+    private readonly IHasOwnership _ownershipResolver;
 
-    public AccountQueries(AppDbContext context, IHttpContextAccessor accessor, ILogger log) {
+    public AccountQueries(
+      AppDbContext context,
+      IHasOwnership ownershipResolver,
+      IHttpContextAccessor accessor,
+      ILogger log) {
       _context = context;
+      _ownershipResolver = ownershipResolver;
       _accessor = accessor;
       _log = log;
     }
 
     [HttpGet("/api/me")]
-    [Authorize(CookieAuthenticationDefaults.AuthenticationScheme)]
-    public ActionResult GetMe() {
-      if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-            .Warning("User is missing name identifier claim");
+    [Authorize]
+    public async Task<ActionResult> GetMe(CancellationToken token) {
+      var (hasAccount, statusCode, account, message) =
+        await _ownershipResolver.HasAccountAsync(_accessor, token);
 
-        throw new System.Exception("user is missing required claims");
+       _log.ForContext("hasAccount", hasAccount)
+          .ForContext("account", account)
+          .ForContext("verb", "GET")
+          .ForContext("message", message)
+          .Debug("/api/me");
+
+      if (!hasAccount || account is null) {
+        return StatusCode((int)statusCode, message);
       }
 
-      var utahIdClaim = _accessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-      if (utahIdClaim is null) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-            .Warning("Name identifier claim is empty");
-
-        throw new System.Exception("user is missing required claims");
-      }
-
-      return Ok(new AuthPayload(_context.Accounts.SingleOrDefault(x => x.UtahId == utahIdClaim.Value)));
+      return Ok(new AuthPayload(account));
     }
 
     [HttpGet("/api/accounts")]
-    public async Task<List<Account>> GetAccounts(CancellationToken cancellationToken)
-      => await _context.Accounts.OrderBy(x => x.LastName).ToListAsync(cancellationToken);
+    [Authorize]
+    public async Task<List<Account>> GetAccounts(CancellationToken token)
+      => await _context.Accounts.OrderBy(x => x.LastName).ToListAsync(token);
 
     [HttpGet("/api/account/{id}")]
     [Authorize]
-    public async Task<Account> GetAccountById(int id, CancellationToken cancellationToken) => await _context.Accounts.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+    public async Task<ActionResult> GetAccountById(int id, CancellationToken token) {
+      var (hasOwnership, statusCode, account, message) =
+        await _ownershipResolver.HasAccountOwnershipAsync(_accessor, id, token);
+
+      _log.ForContext("hasOwnership", hasOwnership)
+          .ForContext("account", account)
+          .ForContext("verb", "GET")
+          .ForContext("message", message)
+          .Debug($"/api/account/{id}");
+
+      if (!hasOwnership || statusCode != HttpStatusCode.OK || account is null) {
+        return StatusCode((int)statusCode, message);
+      }
+
+      return Ok(new AccountPayload(await _context.Accounts.SingleOrDefaultAsync(x => x.Id == id, token)));
+    }
   }
 }

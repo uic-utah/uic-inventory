@@ -1,6 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
@@ -16,72 +15,68 @@ namespace api.GraphQL {
     private readonly AppDbContext _context;
     private readonly IHttpContextAccessor _accessor;
     private readonly ILogger _log;
+    private readonly IHasOwnership _ownershipResolver;
 
-    public SiteQueries(AppDbContext context, IHttpContextAccessor accessor, ILogger log) {
+    public SiteQueries(
+      AppDbContext context,
+      IHttpContextAccessor accessor,
+      IHasOwnership ownershipResolver,
+      ILogger log) {
       _context = context;
       _accessor = accessor;
       _log = log;
+      _ownershipResolver = ownershipResolver;
     }
 
-    private IQueryable<Site> GetSites(AppDbContext context)
-      => context.Sites;
-
-    [HttpGet("/api/site/{id:min(1)}")]
+    [HttpGet("/api/site/{siteId:min(1)}")]
     [Authorize]
-    public async Task<ActionResult> GetSiteById(int id, CancellationToken token) {
-      if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-           .Warning("User is missing name identifier claim");
+    public async Task<ActionResult> GetSiteById(int siteId, CancellationToken token) {
+      var (hasOwnership, statusCode, account, site, message) =
+        await _ownershipResolver.HasSiteOwnershipAsync(_accessor, siteId, token);
 
-        return BadRequest("user is missing required claims");
+      _log.ForContext("hasOwnership", hasOwnership)
+          .ForContext("account", account)
+          .ForContext("message", message)
+          .Debug($"/api/sites/{siteId}");
+
+      if (!hasOwnership || statusCode != HttpStatusCode.OK || account is null || site is null) {
+        return StatusCode((int)statusCode, message);
       }
 
-      var utahIdClaim = _accessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-      if (utahIdClaim is null) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-           .Warning("Name identifier claim is empty");
-
-        return BadRequest("user is missing required claims");
-      }
-
-      var account = _context.Accounts.SingleOrDefault(x => x.UtahId == utahIdClaim.Value);
-      if (account is null) {
-        return BadRequest("account does not exist");
-      }
-
-      return Ok(await _context.Sites
-        .Where(s => s.Id == id && s.AccountFk == account.Id)
-        .Select(s => new {s.Id, s.Name, s.Ownership, s.NaicsPrimary, s.NaicsTitle, s.Address, s.Geometry})
-        .SingleAsync(token));
+      return Ok(new {
+        site.Id,
+        site.Name,
+        site.Ownership,
+        site.NaicsPrimary,
+        site.NaicsTitle,
+        site.Address,
+        site.Geometry
+      });
     }
 
-    [HttpGet("/api/user/{id}/sites")]
+    [HttpGet("/api/sites/mine")]
     [Authorize]
-    public async Task<ActionResult> MySites() {
-      if (_accessor.HttpContext?.User.HasClaim(x => x.Type == ClaimTypes.NameIdentifier) != true) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-           .Warning("User is missing name identifier claim");
+    public async Task<ActionResult> MySites(CancellationToken token) {
+      var (hasAccount, statusCode, account, message) = await _ownershipResolver.HasAccountAsync(_accessor, token);
 
-        throw new System.Exception("user is missing required claims");
+      _log.ForContext("hasOwnership", hasAccount)
+          .ForContext("account", account)
+          .ForContext("message", message)
+          .Debug("/api/sites/mine");
+
+      if (!hasAccount || statusCode != HttpStatusCode.OK || account is null) {
+        return StatusCode((int)statusCode, message);
       }
 
-      var utahIdClaim = _accessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-      if (utahIdClaim is null) {
-        _log.ForContext("claims", _accessor.HttpContext?.User.Claims)
-           .Warning("Name identifier claim is empty");
+      var query = _context.Sites.AsQueryable();
 
-        throw new System.Exception("user is missing required claims");
+      if (account.Access != AccessLevels.elevated) {
+        query = query.Where(s => s.AccountFk == account.Id);
       }
 
-      var account = _context.Accounts.SingleOrDefault(x => x.UtahId == utahIdClaim.Value);
-      if (account is null) {
-        throw new System.Exception("account does not exist");
-      }
-
-      return Ok(await _context.Sites
-        .Where(s => s.AccountFk == account.Id)
+      return Ok(await query
         .Select(x => new { x.Id, x.Name, x.NaicsTitle })
-        .ToListAsync());
+        .ToListAsync(token));
     }
   }
 }
