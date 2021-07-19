@@ -4,7 +4,7 @@ import { Chrome, toast, useParams } from '../PageElements';
 import { Facebook } from 'react-content-loader';
 import { Switch } from '@headlessui/react';
 import { AuthContext } from '../../AuthProvider';
-import { useQuery, useMutation } from 'react-query';
+import { useQuery, useQueryClient, useMutation } from 'react-query';
 import ky from 'ky';
 import {
   ErrorMessage,
@@ -23,12 +23,15 @@ export function Profile() {
   const { id } = useParams();
   const { authInfo } = useContext(AuthContext);
 
+  const queryClient = useQueryClient();
   const { status, error, data } = useQuery(
     'profile',
     () => ky.get(`/api/account/${parseInt(id || authInfo.id)}`).json(),
     { enabled: id || authInfo?.id ? true : false }
   );
-  const { mutate } = useMutation((data) => ky.put('/api/account', { json: { ...data, id: authInfo.id } }).json());
+  const { mutate } = useMutation((data) => ky.put('/api/account', { json: { ...data, id: authInfo.id } }).json(), {
+    onSuccess: () => queryClient.invalidateQueries('auth'),
+  });
 
   const { control, formState, handleSubmit, register, reset } = useForm({
     resolver: yupResolver(schema),
