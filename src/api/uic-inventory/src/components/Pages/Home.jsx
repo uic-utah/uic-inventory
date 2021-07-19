@@ -7,7 +7,7 @@ import { useQuery } from 'react-query';
 
 export function SitesAndInventory({ completeProfile }) {
   const { authInfo } = useContext(AuthContext);
-  const siteQuery = useQuery('sites', () => ky(`/api/user/${parseInt(authInfo.id)}/sites`, { method: 'get' }).json(), {
+  const siteQuery = useQuery('sites', () => ky.get(`/api/sites/mine`).json(), {
     enabled: authInfo?.id ? true : false,
   });
 

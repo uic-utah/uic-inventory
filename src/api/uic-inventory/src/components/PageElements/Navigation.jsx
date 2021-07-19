@@ -44,17 +44,10 @@ const getInitials = (account) => {
 
 function Navigation() {
   const { authInfo, isAuthenticated, receiveNotifications } = useContext(AuthContext);
-  const { status, data, error, refetch } = useQuery(
-    'notifications',
-    () =>
-      ky(`/api/user/${authInfo?.id}/notifications`, {
-        method: 'get',
-      }).json(),
-    {
-      enabled: authInfo?.id ? true : false,
-      refetchInterval: 1000 * 60 * 10,
-    }
-  );
+  const { status, data, error, refetch } = useQuery('notifications', () => ky.get(`/api/notifications/mine`).json(), {
+    enabled: authInfo?.id ? true : false,
+    refetchInterval: 1000 * 60 * 10,
+  });
 
   return (
     <div>
