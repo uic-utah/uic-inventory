@@ -7,7 +7,6 @@ using api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace api.GraphQL {
@@ -81,7 +80,7 @@ namespace api.GraphQL {
         throw new AccountNotFoundException(input.Id.ToString(), ex);
       }
 
-      return Ok(new SitePayload(site));
+      return Ok(new {site.Id});
     }
   }
 }
