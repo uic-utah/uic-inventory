@@ -47,9 +47,9 @@ namespace api {
         options.UseNpgsql(database.ConnectionString)
                .UseSnakeCaseNamingConvention();
 
-        if (Env.IsDevelopment()) {
-          options.LogTo(Console.WriteLine);
-        }
+        // if (Env.IsDevelopment()) {
+        //   options.LogTo(Console.WriteLine);
+        // }
       });
 
       // add context for computations
