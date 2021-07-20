@@ -74,15 +74,18 @@ namespace api.Infrastructure {
          return (hasAccount, statusCode, account, message);
       }
 
-      if (account.Access == AccessLevels.elevated) {
-         _log.ForContext("accountId", id)
-            .ForContext("account", account)
-            .Information("elevated access to external item");
-
-        return (true, HttpStatusCode.OK, account, string.Empty);
-      }
-
       if (account.Id != id) {
+        if (account.Access == AccessLevels.elevated) {
+          _log.ForContext("accountId", id)
+              .ForContext("account", account)
+              .Information("elevated access to external item");
+
+          return (true, HttpStatusCode.OK, account, string.Empty);
+        }
+
+        _log.ForContext("account", account)
+            .Warning("access to external item not permitted");
+
         return (false, HttpStatusCode.Unauthorized, null, "account does not own requested resource");
       }
 
@@ -131,15 +134,15 @@ namespace api.Infrastructure {
 
       var site = await _context.Sites.SingleOrDefaultAsync(x => x.Id == id, token);
 
-      if (account.Access == AccessLevels.elevated) {
-         _log.ForContext("site", id)
-            .ForContext("account", account)
-            .Information("elevated access to external item");
-
-        return (true, HttpStatusCode.OK, account, site, string.Empty);
-      }
-
       if (site.AccountFk != account.Id){
+        if (account.Access == AccessLevels.elevated) {
+          _log.ForContext("site", id)
+              .ForContext("account", account)
+              .Information("elevated access to external item");
+
+          return (true, HttpStatusCode.OK, account, site, string.Empty);
+        }
+
         _log.ForContext("account", account)
             .Warning("access to external item not permitted");
 
