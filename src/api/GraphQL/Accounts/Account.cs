@@ -130,6 +130,8 @@ namespace api.GraphQL {
       if (input.ReceiveNotifications != null) {
         ReceiveNotifications = input.ReceiveNotifications;
       }
+
+      Access = input.Access;
     }
 
     public int Id { get; set; }
