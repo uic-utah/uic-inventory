@@ -26,7 +26,7 @@ namespace api.GraphQL {
     [HttpPost("/api/contact")]
     [Authorize]
     public async Task<ActionResult> CreateContactAsync(ContactInput input, CancellationToken token) {
-      // * contact input.id is a site id
+      // * contact input.id is the site id
       var (hasOwnership, statusCode, account, _, message) =
         await _ownershipResolver.HasSiteOwnershipAsync(_accessor, input.Id, token);
 
@@ -50,7 +50,19 @@ namespace api.GraphQL {
         return NotFound(input.Id.ToString());
       }
 
-      return Created("/api/site", new ContactPayload(contact.Entity));
+      return Created($"/api/site/{input.Id}/contacts", new {
+        contact.Entity.Id,
+        contact.Entity.FirstName,
+        contact.Entity.LastName,
+        contact.Entity.ContactType,
+        contact.Entity.Email,
+        contact.Entity.PhoneNumber,
+        contact.Entity.Organization,
+        contact.Entity.MailingAddress,
+        contact.Entity.City,
+        contact.Entity.State,
+        contact.Entity.ZipCode
+      });
     }
   }
 }
