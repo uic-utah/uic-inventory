@@ -89,12 +89,9 @@ function AddSiteContacts() {
       await queryClient.cancelQueries('contacts');
       const previousValue = queryClient.getQueryData('contacts');
 
-      contact.id = 9999;
-      contact.contactType = valueToLabel(contact.contactType);
-
       queryClient.setQueryData('contacts', (old) => ({
         ...old,
-        contacts: [...old.contacts, contact],
+        contacts: [...old.contacts, { ...contact, id: 9999, contactType: valueToLabel(contact.contactType) }],
       }));
 
       return previousValue;
