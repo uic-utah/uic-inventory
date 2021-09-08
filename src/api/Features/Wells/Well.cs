@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
 
 namespace api.Features {
   public class Well {
@@ -23,6 +21,9 @@ namespace api.Features {
     public Account? Account { get; set; }
     public Site? Site { get; set; }
     public Inventory? Inventory { get; set; }
+    public string? ConstructionDetails { get; set; }
+    public string? InjectateCharacterization { get; set; }
+    public string? HydrogeologicCharacterization { get; set; }
   }
   public class WellCreationPayload : WellPayload {
     public WellCreationPayload(UnauthorizedAccessException error) : base(error) {

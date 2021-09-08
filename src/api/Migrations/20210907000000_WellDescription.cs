@@ -15,19 +15,19 @@ namespace api.Migrations {
         name: "construction_details",
         table: "wells",
         schema: "public",
-        type: "character varying(512)",
+        type: "character varying(2500)",
         nullable: true);
       migrationBuilder.AddColumn<string>(
         name: "injectate_characterization",
         table: "wells",
         schema: "public",
-        type: "character varying(512)",
+        type: "character varying(2500)",
         nullable: true);
       migrationBuilder.AddColumn<string>(
         name: "hydrogeologic_characterization",
         table: "wells",
         schema: "public",
-        type: "character varying(512)",
+        type: "character varying(2500)",
         nullable: true);
     }
 
