@@ -39,8 +39,6 @@ namespace api.Features {
     public SitePayload Site { get; }
   }
   public class WellPayload : ResponseContract {
-    private string status;
-
     public WellPayload(UnauthorizedAccessException error) : base(error.Message) { }
     public WellPayload(Exception error) : base("WTF01:Something went terribly wrong that we did not expect.") { }
     public WellPayload(Well well) {

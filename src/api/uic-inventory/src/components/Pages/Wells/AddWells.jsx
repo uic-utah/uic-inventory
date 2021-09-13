@@ -278,7 +278,7 @@ function AddWells() {
                     <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
                       <button
                         type="submit"
-                        onClick={() => toast.info('There is nothing here yet. Check back after the next release.')}
+                        onClick={() => history.push(`/site/${siteId}/inventory/${inventoryId}/add-well-details`)}
                       >
                         Next
                       </button>
