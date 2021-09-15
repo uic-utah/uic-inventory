@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { CloudUploadIcon } from '@heroicons/react/outline';
 import { Chrome, OkNotToggle } from '../../PageElements';
-import { GridHeading, LimitedTextarea, Label } from '../../FormElements';
+import { GridHeading, LimitedTextarea, LimitedDropzone, Label } from '../../FormElements';
 import { useWebMap } from '../../Hooks';
 
 import '@arcgis/core/assets/esri/themes/light/main.css';
@@ -51,40 +51,36 @@ function AddWellDetails() {
                       className="grid grid-cols-2 gap-2 px-4 py-5"
                       onSubmit={handleSubmit((data) => console.log(data))}
                     >
-                      <div className="flex flex-col">
-                        <Label id="constructionDetails" />
-                        <div className="flex flex-row border-t border-b border-r rounded-r">
-                          <LimitedTextarea
-                            name="constructionDetails"
-                            rows={5}
-                            limit={2500}
-                            register={register}
-                            errors={formState.errors}
-                            className="border-0 rounded-l shadow-none rounded-0"
-                          />
-                          <label className="flex items-center h-full bg-gray-800 rounded-r">
-                            <CloudUploadIcon className="w-8 h-8 mx-2 text-white" />
-                            <input name="constructionDetailsFile" type="file" className="hidden" {...register} />
-                          </label>
-                        </div>
-                      </div>
-                      <div className="flex flex-col">
-                        <Label id="injectateCharacterization" />
-                        <div className="flex flex-row border-t border-b border-r rounded-r">
-                          <LimitedTextarea
-                            name="injectateCharacterization"
-                            rows={5}
-                            limit={2500}
-                            register={register}
-                            errors={formState.errors}
-                            className="border-0 rounded-l shadow-none rounded-0"
-                          />
-                          <label className="flex items-center h-full bg-gray-800 rounded-r">
-                            <CloudUploadIcon className="w-8 h-8 mx-2 text-white" />
-                            <input name="injectateCharacterizationFile" type="file" className="hidden" {...register} />
-                          </label>
-                        </div>
-                      </div>
+                      <LimitedDropzone
+                        textarea={{
+                          id: 'constructionDetails',
+                          limit: 2500,
+                          rows: '5',
+                          placeholder: 'Type your response or upload a file',
+                        }}
+                        forms={{
+                          errors: formState.errors,
+                          register,
+                        }}
+                        file={{
+                          id: 'constructionDetailsFile',
+                        }}
+                      />
+                      <LimitedDropzone
+                        textarea={{
+                          id: 'injectateCharacterization',
+                          limit: 2500,
+                          rows: '5',
+                          placeholder: 'Type your response or upload a file',
+                        }}
+                        forms={{
+                          errors: formState.errors,
+                          register,
+                        }}
+                        file={{
+                          id: 'injectateCharacterizationFile',
+                        }}
+                      />
                       <div className="md:col-span-2">
                         <Label id="hydrogeologicCharacterization" />
                         <LimitedTextarea
