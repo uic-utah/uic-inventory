@@ -6,6 +6,7 @@
     "aspnetcore",
     "clsx",
     "combobox",
+    "Dropzone",
     "esbuild",
     "esrijson",
     "gcloud",

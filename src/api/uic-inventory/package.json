@@ -27,6 +27,7 @@
     "react": "^17.0.2",
     "react-content-loader": "^6.0.3",
     "react-dom": "^17.0.2",
+    "react-dropzone": "^11.4.0",
     "react-hook-form": "^7.15.3",
     "react-phone-number-input": "^3.1.27",
     "react-query": "^3.23.2",
