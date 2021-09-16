@@ -140,3 +140,97 @@ export const WellLocationSchema = yup.object().shape({
     }),
   remediationProjectId: yup.string().optional(),
 });
+
+export const WellDetailsSchema = yup.object().shape(
+  {
+    a: yup
+      .string()
+      .optional()
+      .when('b', {
+        is: (val) => {
+          if (val === undefined || val === null || val === '') {
+            return true;
+          }
+          return false;
+        },
+        then: yup.string().max(2500).required(),
+        otherwise: yup
+          .string()
+          .oneOf([undefined, null])
+          .transform(() => undefined),
+      }),
+    b: yup
+      .mixed()
+      .optional()
+      .when('a', {
+        is: (val) => {
+          if (val === undefined || val === null || val === '') {
+            return true;
+          }
+          return false;
+        },
+        then: yup.object().shape({
+          name: yup.string().required(),
+        }),
+        otherwise: yup
+          .mixed()
+          .oneOf([undefined, null])
+          .transform(() => undefined),
+      }),
+    // hydrogeologicCharacterization: yup.string().max(2500).optional(),
+    c: yup
+      .mixed()
+      .optional()
+      .when('$subClass', {
+        is: 5002,
+        then: yup
+          .mixed()
+          .optional()
+          .when('d', {
+            is: (val) => {
+              if (val === undefined || val === null || val === '') {
+                return true;
+              }
+              return false;
+            },
+            then: yup.string().max(2500).required(),
+            otherwise: yup
+              .string()
+              .oneOf([undefined, null])
+              .transform(() => undefined),
+          }),
+      }),
+    d: yup
+      .mixed()
+      .optional()
+      .when('$subClass', {
+        is: 5002,
+        then: yup
+          .mixed()
+          .optional()
+          .when('c', {
+            is: (val) => {
+              if (val === undefined || val === null || val === '') {
+                return true;
+              }
+              return false;
+            },
+            then: yup.object().shape({
+              name: yup.string().required(),
+            }),
+            otherwise: yup
+              .mixed()
+              .oneOf([undefined, null])
+              .transform(() => undefined),
+          }),
+      }),
+  },
+  [
+    ['a', 'b'],
+    ['a', 'c'],
+    ['a', 'd'],
+    ['b', 'c'],
+    ['b', 'd'],
+    ['c', 'd'],
+  ]
+);
