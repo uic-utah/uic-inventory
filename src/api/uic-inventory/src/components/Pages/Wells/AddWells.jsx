@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useTable } from 'react-table';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
 import ky from 'ky';
+import { ErrorMessage } from '@hookform/error-message';
 import { Dialog, Transition } from '@headlessui/react';
 import { TrashIcon } from '@heroicons/react/outline';
 import Graphic from '@arcgis/core/Graphic';
@@ -17,6 +18,7 @@ import { PinSymbol, PolygonSymbol } from '../../MapElements/MarkerSymbols';
 import { AuthContext } from '../../../AuthProvider';
 import { useWebMap, useViewPointZooming, useGraphicManager } from '../../Hooks';
 import { useOpenClosed } from '../../Hooks/useOpenClosedHook';
+import ErrorMessageTag from '../../FormElements/ErrorMessage';
 
 import '@arcgis/core/assets/esri/themes/light/main.css';
 
@@ -73,6 +75,7 @@ function AddWells() {
   const { handleSubmit, register, formState, reset, setValue, unregister, watch } = useForm({
     resolver: yupResolver(schema),
     context: { subClass: data?.subClass },
+    mode: 'onChange',
   });
 
   const watchStatus = watch('status');
@@ -266,6 +269,7 @@ function AddWells() {
                 <Label id="wellLocation" />
                 <OkNotToggle classes="h-12" status={watchGeometry} />
               </div>
+              <ErrorMessage errors={formState.errors} name="geometry.x" as={ErrorMessageTag} />
               <div className="flex justify-between px-4 py-3">
                 <button
                   type="button"
