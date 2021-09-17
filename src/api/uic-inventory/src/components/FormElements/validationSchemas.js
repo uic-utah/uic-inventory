@@ -114,10 +114,9 @@ export const WellLocationSchema = yup.object().shape({
   geometry: yup
     .object()
     .shape({
-      x: yup.number().required(),
+      x: yup.number().required('A well point must be placed on the map'),
       y: yup.number().required(),
     })
-    .required('A well point must be placed on the map')
     .label('Well location'),
   // only for SER wells
   remediationType: yup
@@ -141,96 +140,43 @@ export const WellLocationSchema = yup.object().shape({
   remediationProjectId: yup.string().optional(),
 });
 
-export const WellDetailsSchema = yup.object().shape(
+const empty = (val) => {
+  return val === undefined || val === null || val === '';
+};
+
+export const WellDetailsCommonSchema = (a, b) => {
+  return {
+    hydrogeologicCharacterization: yup.string().max(2500).optional(),
+    [a]: yup.string().when(b, {
+      is: empty,
+      then: yup.string().max(2500).required(),
+      otherwise: yup.string().oneOf([null], 'These fields are mutually exclusive'),
+    }),
+    [b]: yup.mixed().when(a, {
+      is: empty,
+      then: yup
+        .object()
+        .shape({
+          name: yup.string().max(512).required(),
+        })
+        .required(),
+      otherwise: yup.object().oneOf([null], 'These fields are mutually exclusive'),
+    }),
+  };
+};
+export const WellDetailsSchema = yup
+  .object()
+  .shape(WellDetailsCommonSchema('constructionDetails', 'constructionDetailsFile'), [
+    ['constructionDetails', 'constructionDetailsFile'],
+  ]);
+
+export const WellSerDetailsSchema = yup.object().shape(
   {
-    a: yup
-      .string()
-      .optional()
-      .when('b', {
-        is: (val) => {
-          if (val === undefined || val === null || val === '') {
-            return true;
-          }
-          return false;
-        },
-        then: yup.string().max(2500).required(),
-        otherwise: yup
-          .string()
-          .oneOf([undefined, null])
-          .transform(() => undefined),
-      }),
-    b: yup
-      .mixed()
-      .optional()
-      .when('a', {
-        is: (val) => {
-          if (val === undefined || val === null || val === '') {
-            return true;
-          }
-          return false;
-        },
-        then: yup.object().shape({
-          name: yup.string().required(),
-        }),
-        otherwise: yup
-          .mixed()
-          .oneOf([undefined, null])
-          .transform(() => undefined),
-      }),
-    // hydrogeologicCharacterization: yup.string().max(2500).optional(),
-    c: yup
-      .mixed()
-      .optional()
-      .when('$subClass', {
-        is: 5002,
-        then: yup
-          .mixed()
-          .optional()
-          .when('d', {
-            is: (val) => {
-              if (val === undefined || val === null || val === '') {
-                return true;
-              }
-              return false;
-            },
-            then: yup.string().max(2500).required(),
-            otherwise: yup
-              .string()
-              .oneOf([undefined, null])
-              .transform(() => undefined),
-          }),
-      }),
-    d: yup
-      .mixed()
-      .optional()
-      .when('$subClass', {
-        is: 5002,
-        then: yup
-          .mixed()
-          .optional()
-          .when('c', {
-            is: (val) => {
-              if (val === undefined || val === null || val === '') {
-                return true;
-              }
-              return false;
-            },
-            then: yup.object().shape({
-              name: yup.string().required(),
-            }),
-            otherwise: yup
-              .mixed()
-              .oneOf([undefined, null])
-              .transform(() => undefined),
-          }),
-      }),
+    ...WellDetailsCommonSchema('constructionDetails', 'constructionDetailsFile'),
+    ...WellDetailsCommonSchema('injectateCharacteristics', 'injectateCharacteristicsFile'),
   },
   [
-    ['a', 'b'],
-    ['a', 'c'],
-    ['a', 'd'],
-    ['b', 'c'],
-    ['b', 'd'],
-    ['c', 'd'],
+    ['constructionDetails', 'constructionDetailsFile'],
+    ['injectateCharacteristics', 'injectateCharacteristicsFile'],
   ]
 );

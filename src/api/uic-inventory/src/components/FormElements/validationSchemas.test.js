@@ -1,7 +1,9 @@
-import { WellDetailsSchema as schema } from './validationSchemas';
+import { WellDetailsCommonSchema } from './validationSchemas';
+import * as yup from 'yup';
 
 describe('schema tests', () => {
-  describe('with context', () => {
+  describe('without context', () => {
+    const schema = yup.object().shape(WellDetailsCommonSchema('a', 'b'), [['a', 'b']]);
     test('throws when empty', () => {
       expect(() => schema.validateSync({})).toThrow();
     });
@@ -28,15 +30,28 @@ describe('schema tests', () => {
 
     test('a and b are mutually exclusive', () => {
       expect(() =>
-        schema.validateSync({
-          a: 'a',
-          b: { name: 'File' },
-        })
-      ).toThrow();
+        console.log(
+          schema.validateSync({
+            a: 'a',
+            b: { name: 'b' },
+          })
+        )
+      ).toThrowError(/are mutually exclusive/);
     });
   });
 
-  describe('without context', () => {
+  describe('with context', () => {
+    const schema = yup.object().shape(
+      {
+        ...WellDetailsCommonSchema('a', 'b'),
+        ...WellDetailsCommonSchema('c', 'd'),
+      },
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ]
+    );
+
     test('throws when empty', () => {
       expect(() => schema.validateSync({}, { context: { subClass: 5002 } })).toThrow();
     });
