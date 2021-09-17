@@ -133,6 +133,7 @@ function AddWells() {
     setViewPoint(new Viewpoint({ targetGeometry: geometry.centroid, scale: 1500 }));
   }, [data, status]);
 
+  // place site wells
   useEffect(() => {
     if (status !== 'success') {
       return;
