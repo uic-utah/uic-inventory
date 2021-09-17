@@ -64,7 +64,7 @@ function AddWells() {
     onSuccess: () => {
       toast.success('Well added successfully!');
       queryClient.invalidateQueries(['inventory', inventoryId]);
-      reset();
+
       setPointGraphic();
     },
     onError: (error) => onRequestError(error, 'We had some trouble adding your well.'),
@@ -94,7 +94,19 @@ function AddWells() {
     register('geometry');
   }, [register]);
 
-  // hydrate form with existing data
+  //* decouple reset from handleSubmit because we use formState and they both act on it
+  useEffect(() => {
+    if (!formState.isSubmitSuccessful) {
+      return;
+    }
+
+    reset();
+
+    //* re register geometry so the form can be submitted multiple times
+    register('geometry');
+  }, [formState, register, reset, setValue]);
+
+  // place site polygon
   useEffect(() => {
     if (status !== 'success' || graphic) {
       return;
