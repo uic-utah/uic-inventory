@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { CloudUploadIcon } from '@heroicons/react/outline';
-import { Chrome, OkNotToggle } from '../../PageElements';
+import { Chrome } from '../../PageElements';
 import { GridHeading, LimitedTextarea, LimitedDropzone, Label } from '../../FormElements';
 import { useWebMap } from '../../Hooks';
 
