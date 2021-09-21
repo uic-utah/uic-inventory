@@ -36,7 +36,7 @@ describe('schema tests', () => {
             b: { name: 'b' },
           })
         )
-      ).toThrowError(/are mutually exclusive/);
+      ).toThrowError(/type your response or upload a file/);
     });
   });
 
