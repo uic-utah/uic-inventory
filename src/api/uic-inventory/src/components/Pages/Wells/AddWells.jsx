@@ -104,9 +104,6 @@ function AddWells() {
     }
 
     reset();
-
-    //* re register geometry so the form can be submitted multiple times
-    register('geometry');
   }, [formState, register, reset, setValue]);
 
   // place site polygon
