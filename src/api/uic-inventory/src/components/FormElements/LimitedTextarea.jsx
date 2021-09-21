@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { ErrorMessage } from '@hookform/error-message';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
@@ -8,27 +9,9 @@ import { toast } from 'react-toastify';
 import ErrorMessageTag from './ErrorMessage';
 import { Label } from './TextInput';
 
-export const LimitedTextarea = ({
-  name,
-  rows,
-  placeholder,
-  value,
-  limit,
-  onChange,
-  inputRef,
-  register,
-  errors,
-  classNames,
-  disabled,
-}) => {
-  const [length, setLength] = useState(value?.length || 0);
-  let change = onChange ? onChange : (event) => setLength(event.target.value.length);
-
-  const classes = clsx(
-    'relative',
-    // 'block w-full px-3 py-2 text-sm leading-tight text-gray-800 placeholder-gray-400 transition duration-100 ease-in-out bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:ring-opacity-50',
-    classNames
-  );
+export const LimitedTextarea = ({ id, rows, placeholder, value, maxLength, register, errors, className, disabled }) => {
+  const { limit, change, remaining } = useMaxLength({ limit: maxLength });
+  const { onChange, onBlur, ref, name } = register(id);
 
   return (
     <div className="relative flex flex-grow">
@@ -36,18 +19,29 @@ export const LimitedTextarea = ({
         name={name}
         disabled={disabled}
         id={name}
-        rows={rows}
+        rows={rows.toString()}
         type="textarea"
         defaultValue={value}
-        ref={inputRef}
+        ref={ref}
         maxLength={limit}
         placeholder={placeholder}
-        className={classes}
-        onChange={change}
-        {...register(name)}
+        className={className}
+        onBlur={onBlur}
+        onChange={(e) => {
+          onChange(e);
+          change(e);
+        }}
       ></textarea>
-      {length > 0 && (
-        <span className="absolute bottom-0 text-xs text-gray-400 right-4">{limit - length} characters left</span>
+      {remaining !== limit && (
+        <span
+          className={clsx('absolute bottom-0 text-sm right-5', {
+            'text-gray-500': remaining > 10,
+            'text-yellow-600': remaining <= 15 && remaining > 5,
+            'text-red-600': remaining <= 5,
+          })}
+        >
+          {remaining} characters left
+        </span>
       )}
       <ErrorMessage errors={errors} name={name} as={ErrorMessageTag} />
     </div>
@@ -94,56 +88,6 @@ LimitedTextarea.defaultProps = {
   inputRef: null,
   onChange: undefined,
   disabled: false,
-};
-
-export const LimitedTextareaFileInput = () => {
-  const [file, setFile] = useState(null);
-  const register = () => {};
-  const formState = { errors: {} };
-  const labelClasses = clsx('flex items-center bg-gray-800 rounded-r justify-center', {
-    'flex-col': file,
-  });
-
-  return (
-    <div className="flex flex-col">
-      <Label id="injectateCharacterization" />
-      <div className="flex flex-row">
-        <LimitedTextarea
-          name="injectateCharacterization"
-          rows="5"
-          limit={2500}
-          register={register}
-          disabled={file}
-          placeholder={
-            !file
-              ? 'Type your characterization or upload a document'
-              : 'This field is disabled when an attachment is chosen'
-          }
-          errors={formState.errors}
-          className="border-0 border-t border-b border-r rounded-l rounded-r shadow-none"
-        />
-        <label className={labelClasses}>
-          {file ? (
-            <>
-              <CheckIcon className="w-8 h-8 mx-2 text-green-500" />
-              <XIcon className="w-8 h-8 mx-2 text-pink-500" />
-            </>
-          ) : (
-            <>
-              <CloudUploadIcon className="w-8 h-8 mx-2 text-white" />
-              <input
-                name="injectateCharacterizationFile"
-                type="file"
-                className="hidden"
-                {...register}
-                onChange={(e) => setFile(e.target.value)}
-              />
-            </>
-          )}
-        </label>
-      </div>
-    </div>
-  );
 };
 
 export const useMaxLength = ({ value, limit }) => {
@@ -208,19 +152,28 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
           'col-span-2': remaining < limit,
         })}
       >
-        <textarea
-          className="rounded-l"
-          id={textarea.id}
-          name={textarea.id}
-          rows={textarea.rows}
-          disabled={textarea.disabled}
-          type="textarea"
-          placeholder={textarea.placeholder}
-          defaultValue={textarea.value}
-          maxLength={limit}
-          onKeyUp={change}
-          {...forms.register(textarea.id)}
-        />
+        {forms.control && (
+          <Controller
+            name={textarea.id}
+            control={forms?.control}
+            render={({ field }) => (
+              <textarea
+                className="rounded-l"
+                rows={textarea.rows}
+                disabled={textarea.disabled}
+                type="textarea"
+                placeholder={textarea.placeholder}
+                defaultValue={textarea.value}
+                maxLength={limit}
+                {...field}
+                onChange={(e) => {
+                  change(e);
+                  field.onChange(e);
+                }}
+              />
+            )}
+          />
+        )}
         {remaining !== limit && (
           <span
             className={clsx('absolute bottom-0 text-sm right-5', {
@@ -248,8 +201,30 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
             }
           )}
         >
-          <input {...getInputProps()} {...forms.register(file.id)} />
-          <DropzoneMessaging isDragActive={isDragActive} files={files} reset={() => setFiles([])} />
+          {forms.control && (
+            <Controller
+              name={file.id}
+              control={forms?.control}
+              render={({ field }) => (
+                <input
+                  {...getInputProps({
+                    onChange: (e) => {
+                      console.log(e);
+                      field.onChange(e.target.files[0]);
+                    },
+                  })}
+                />
+              )}
+            />
+          )}
+          <DropzoneMessaging
+            isDragActive={isDragActive}
+            files={files}
+            reset={() => {
+              forms.reset({ [file.id]: undefined });
+              setFiles([]);
+            }}
+          />
           {files.length === 0 && (
             <button type="button" onClick={open}>
               <CloudUploadIcon className="w-6 h-6 mx-2 text-white" />

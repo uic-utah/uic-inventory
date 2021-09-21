@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Chrome } from '../../PageElements';
-import { GridHeading, LimitedTextarea, LimitedDropzone, Label } from '../../FormElements';
+import { GridHeading, LimitedTextarea, LimitedDropzone, Label, WellDetailsSchema as schema } from '../../FormElements';
 import { useWebMap } from '../../Hooks';
 
 import '@arcgis/core/assets/esri/themes/light/main.css';
@@ -14,8 +15,8 @@ function AddWellDetails() {
     },
   };
 
-  const { handleSubmit, register, formState } = useForm({
-    //  resolver: yupResolver(schema),
+  const { control, formState, handleSubmit, register, reset } = useForm({
+    resolver: yupResolver(schema),
     //  context: { subClass: data?.subClass },
   });
 
@@ -60,6 +61,8 @@ function AddWellDetails() {
                         forms={{
                           errors: formState.errors,
                           register,
+                          control,
+                          reset,
                         }}
                         file={{
                           id: 'constructionDetailsFile',
@@ -75,6 +78,8 @@ function AddWellDetails() {
                         forms={{
                           errors: formState.errors,
                           register,
+                          control,
+                          reset,
                         }}
                         file={{
                           id: 'injectateCharacterizationFile',
@@ -83,19 +88,17 @@ function AddWellDetails() {
                       <div className="md:col-span-2">
                         <Label id="hydrogeologicCharacterization" />
                         <LimitedTextarea
-                          name="hydrogeologicCharacterization"
-                          rows={5}
-                          limit={2500}
+                          id="hydrogeologicCharacterization"
+                          rows="5"
+                          maxLength={2500}
                           register={register}
                           errors={formState.errors}
                         />
                       </div>
+                      <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
+                        <button type="submit">Next</button>
+                      </div>
                     </form>
-                    <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                      <button type="submit" onClick={() => {}}>
-                        Next
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
