@@ -150,20 +150,21 @@ export const WellDetailsCommonSchema = (a, b) => {
     [a]: yup.string().when(b, {
       is: empty,
       then: yup.string().max(2500).required(),
-      otherwise: yup.string().oneOf([null], 'These fields are mutually exclusive'),
+      otherwise: yup.string().oneOf([null], 'Choose to type your response or upload a file'),
     }),
     [b]: yup.mixed().when(a, {
       is: empty,
       then: yup
         .object()
         .shape({
-          name: yup.string().max(512).required(),
+          path: yup.string().max(512).required(),
         })
         .required(),
-      otherwise: yup.object().oneOf([null], 'These fields are mutually exclusive'),
+      otherwise: yup.object().oneOf([null], 'Choose to type your response or upload a file'),
     }),
   };
 };
+
 export const WellDetailsSchema = yup
   .object()
   .shape(WellDetailsCommonSchema('constructionDetails', 'constructionDetailsFile'), [
