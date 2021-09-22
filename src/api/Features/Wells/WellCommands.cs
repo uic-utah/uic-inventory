@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using api.Infrastructure;
@@ -60,6 +61,47 @@ namespace api.Features {
         // await _publisher.Publish(new WellNotifications.EditNotification(well.Id), cancellationToken);
 
         return well;
+      }
+    }
+  }
+
+  public static class UpdateWell {
+    public class Command : IRequest<Well> {
+      public Command(WellDetailInput input) {
+        Wells = input;
+      }
+
+      public WellDetailInput Wells { get; }
+    }
+
+    public class Handler : IRequestHandler<Command, Well> {
+      private readonly IAppDbContext _context;
+      private readonly IPublisher _publisher;
+      private readonly ILogger _log;
+      private readonly HasRequestMetadata _metadata;
+
+      public Handler(
+        IAppDbContext context,
+        IPublisher publisher,
+        HasRequestMetadata metadata,
+        ILogger log) {
+        _context = context;
+        _publisher = publisher;
+        _log = log;
+        _metadata = metadata;
+      }
+      public async Task<Well> Handle(Command message, CancellationToken cancellationToken) {
+        _log.ForContext("input", message)
+          .ForContext("verb", "PUT")
+          .Debug("/api/well");
+
+        await _context.Wells.FindAsync(message.Wells.SelectedWells.Cast<object>().ToArray(), cancellationToken);
+
+        // await _context.SaveChangesAsync(cancellationToken);
+
+        // await _publisher.Publish(new SiteNotifications.EditNotification(site.Id), cancellationToken);
+
+        return new Well();
       }
     }
   }

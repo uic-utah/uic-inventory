@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Http;
 
 namespace api.Features {
   public class Well {
@@ -73,6 +74,14 @@ namespace api.Features {
     public string? RemediationProjectId { get; set; }
   }
 
+  public class WellDetailInput : WellInput {
+    public int[] SelectedWells { get; set; } = Array.Empty<int>();
+    public IFormFile? ConstructionDetailsFile { get; set; }
+    public IFormFile? InjectateCharacteristicsFile { get; set; }
+    public string? ConstructionDetails { get; set; }
+    public string? InjectateCharacteristics { get; set; }
+    public string? HydrogeologicCharacterization { get; set; }
+  }
   public static class WellLookup {
     public static string OperatingStatus(string? key, string missingValue = "") {
       if (string.IsNullOrEmpty(key)) {

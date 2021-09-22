@@ -25,24 +25,14 @@ export const LimitedTextarea = ({ id, rows, placeholder, value, maxLength, regis
         ref={ref}
         maxLength={limit}
         placeholder={placeholder}
-        className={className}
+        className={clsx('px-2 rounded', className)}
         onBlur={onBlur}
         onChange={(e) => {
           onChange(e);
           change(e);
         }}
       ></textarea>
-      {remaining !== limit && (
-        <span
-          className={clsx('absolute bottom-0 text-sm right-5', {
-            'text-gray-500': remaining > 10,
-            'text-yellow-600': remaining <= 15 && remaining > 5,
-            'text-red-600': remaining <= 5,
-          })}
-        >
-          {remaining} characters left
-        </span>
-      )}
+      <CharactersRemaining limit={limit} remaining={remaining} />
       <ErrorMessage errors={errors} name={name} as={ErrorMessageTag} />
     </div>
   );
@@ -111,9 +101,7 @@ export const DropzoneMessaging = ({ isDragActive, files = [], reset = () => {} }
       <div className="">
         <div className="flex flex-row">
           <CheckIcon className="w-8 h-8 mx-2 text-green-500" />
-          <span className="self-center overflow-hidden lowercase truncate text-gray-50 whitespace-nowrap">
-            {files[0].name}
-          </span>
+          <span className="self-center overflow-hidden lowercase truncate whitespace-nowrap">{files[0].name}</span>
         </div>
         <button type="button" className="w-full mt-4" onClick={reset}>
           <XIcon className="w-6 h-6 mx-2 text-pink-500" />
@@ -123,7 +111,27 @@ export const DropzoneMessaging = ({ isDragActive, files = [], reset = () => {} }
     );
   }
 
-  return <p className="self-center text-center">Drop a file here or</p>;
+  return <p className="self-center text-center">Drag a file here or</p>;
+};
+
+export const CharactersRemaining = ({ remaining, limit }) => {
+  if (remaining === limit) {
+    return null;
+  }
+
+  const percentage = (limit - remaining) / limit;
+
+  return (
+    <span
+      className={clsx('absolute bottom-0 text-xs right-3', {
+        'text-gray-500': percentage >= 0 && percentage < 0.8,
+        'text-yellow-600': percentage >= 0.8 && percentage < 0.9,
+        'text-red-600': percentage >= 0.9,
+      })}
+    >
+      {remaining} characters left
+    </span>
+  );
 };
 
 const acceptableFileTypes = ['.pdf', '.doc', '.docx', '.jpeg', '.jpg', '.png'];
@@ -144,7 +152,7 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
   });
 
   return (
-    <section className="grid grid-cols-2" {...getRootProps()}>
+    <section className="grid content-start grid-cols-2" {...getRootProps()}>
       <Label className="col-span-2" id={textarea.id} />
       <section
         className={clsx('relative', {
@@ -158,7 +166,10 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
             control={forms?.control}
             render={({ field }) => (
               <textarea
-                className="rounded-l"
+                className={clsx('px-2', {
+                  'rounded-l': remaining === limit,
+                  rounded: remaining < limit,
+                })}
                 rows={textarea.rows}
                 disabled={textarea.disabled}
                 type="textarea"
@@ -174,33 +185,16 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
             )}
           />
         )}
-        {remaining !== limit && (
-          <span
-            className={clsx('absolute bottom-0 text-sm right-5', {
-              'text-gray-500': remaining > 10,
-              'text-yellow-600': remaining <= 15 && remaining > 5,
-              'text-red-600': remaining <= 5,
-            })}
-          >
-            {remaining} characters left
-          </span>
-        )}
+        <CharactersRemaining limit={limit} remaining={remaining} />
       </section>
       <section
-        className={clsx('flex border-t border-b border-r rounded-r p-2', {
-          'col-span-2': files.length > 0,
+        className={clsx('flex p-2', {
+          'bg-gray-50 border-gray-400 border-t border-b border-r rounded-r border-dashed': files.length === 0,
+          'bg-white col-span-2': files.length > 0,
           hidden: remaining < limit,
         })}
       >
-        <div
-          className={clsx(
-            'flex flex-col justify-around flex-grow px-2 border border-gray-800 border-dashed rounded-lg',
-            {
-              'bg-gray-50': files.length === 0,
-              'bg-gray-800': files.length > 0,
-            }
-          )}
-        >
+        <div className={clsx('flex flex-col justify-around flex-grow px-2')}>
           {forms.control && (
             <Controller
               name={file.id}
@@ -209,8 +203,8 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
                 <input
                   {...getInputProps({
                     onChange: (e) => {
-                      console.log(e);
                       field.onChange(e.target.files[0]);
+                      forms.trigger();
                     },
                   })}
                 />
@@ -226,14 +220,18 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
             }}
           />
           {files.length === 0 && (
-            <button type="button" onClick={open}>
+            <button className="items-center pl-0" type="button" onClick={open}>
               <CloudUploadIcon className="w-6 h-6 mx-2 text-white" />
-              Choose File
+              Pick a file
             </button>
           )}
         </div>
       </section>
-      <ErrorMessage errors={forms.errors} name={textarea.id} as={ErrorMessageTag} />
+      {forms.errors[textarea.id] && (
+        <div className="col-span-2">
+          <ErrorMessage errors={forms.errors} name={textarea.id} as={ErrorMessageTag} />
+        </div>
+      )}
     </section>
   );
 };
