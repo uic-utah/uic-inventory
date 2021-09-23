@@ -21,6 +21,43 @@ const empty = (val) => {
   return val === undefined || val === null || val === '';
 };
 
+const CompletedWellsSymbol = PinSymbol.clone();
+CompletedWellsSymbol.data.primitiveOverrides = [
+  {
+    type: 'CIMPrimitiveOverride',
+    primitiveName: 'complete',
+    propertyName: 'Color',
+    valueExpressionInfo: {
+      type: 'CIMExpressionInfo',
+      title: 'Color of pin based on completeness',
+      expression: 'iif($feature.complete, [31, 41, 55, .25], [31, 41, 55, 1]);',
+      returnType: 'Default',
+    },
+  },
+  {
+    type: 'CIMPrimitiveOverride',
+    primitiveName: 'selected',
+    propertyName: 'Color',
+    valueExpressionInfo: {
+      type: 'CIMExpressionInfo',
+      title: 'Color of pin based on selected status',
+      expression: 'iif($feature.selected, [147, 197, 253, 1], [251, 251, 251, 1]);',
+      returnType: 'Default',
+    },
+  },
+  {
+    type: 'CIMPrimitiveOverride',
+    primitiveName: 'selected-stroke',
+    propertyName: 'Color',
+    valueExpressionInfo: {
+      type: 'CIMExpressionInfo',
+      title: 'Color of pin based on selected status',
+      expression: 'iif($feature.selected, [255, 255, 255, 1], [251, 191, 36, 1]);',
+      returnType: 'Default',
+    },
+  },
+];
+
 function AddWellDetails() {
   const { authInfo } = useContext(AuthContext);
   const { siteId, inventoryId } = useParams();
@@ -28,7 +65,6 @@ function AddWellDetails() {
   const mapDiv = useRef(null);
   const pointAddressClickEvent = useRef(null);
   const hoverEvent = useRef(null);
-  const [wellsRemaining, setWellsRemaining] = useState(0);
   const [selectedWells, setSelectedWells] = useState([]);
 
   // get site and inventory data
@@ -40,15 +76,6 @@ function AddWellDetails() {
       onError: (error) => onRequestError(error, 'We had some trouble finding your wells.'),
     }
   );
-
-  // update wells
-  const { mutate } = useMutation((body) => ky.put('/api/well', { body }).json(), {
-    onSuccess: () => {
-      toast.success('Wells updated successfully!');
-      queryClient.invalidateQueries(['inventory', inventoryId]);
-    },
-    onError: (error) => onRequestError(error, 'We had some trouble updating your wells.'),
-  });
 
   const { control, formState, handleSubmit, register, reset, trigger } = useForm({
     resolver: (resolverData, context) => {
@@ -121,12 +148,24 @@ function AddWellDetails() {
         }
       }
 
-      return { values: errors ? {} : resolverData, errors: errors };
+      return { values: errors ? resolverData : {}, errors: errors };
     },
     context: { subClass: data?.subClass },
   });
 
-  const { append, remove } = useFieldArray({ control, name: 'selectedWells' });
+  // update wells
+  const { mutate } = useMutation((body) => ky.put('/api/well', { body }), {
+    onSuccess: () => {
+      toast.success('Wells updated successfully!');
+      setSelectedWells([]);
+      remove();
+      reset();
+      queryClient.invalidateQueries(['inventory', inventoryId]);
+    },
+    onError: (error) => onRequestError(error, 'We had some trouble updating your wells.'),
+  });
+
+  const { append, remove } = useFieldArray({ control, name: 'selectedWells', keyName: 'key' });
 
   const { mapView } = useWebMap(mapDiv, '80c26c2104694bbab7408a4db4ed3382');
   // zoom map on geocode
@@ -157,7 +196,7 @@ function AddWellDetails() {
     );
 
     setViewPoint(new Viewpoint({ targetGeometry: geometry.centroid, scale: 1500 }));
-  }, [data, status]);
+  }, [data, graphic, setPolygonGraphic, setViewPoint, status]);
 
   // place site wells
   useEffect(() => {
@@ -169,14 +208,13 @@ function AddWellDetails() {
       (well) =>
         new Graphic({
           geometry: new Point(JSON.parse(well.geometry)),
-          attributes: { id: well.id },
-          symbol: PinSymbol,
+          attributes: { id: well.id, complete: well.wellDetailsComplete, selected: false },
+          symbol: CompletedWellsSymbol,
         })
     );
 
-    setWellsRemaining(wells.length);
     setExistingPointGraphics(wells);
-  }, [data, status]);
+  }, [data, setExistingPointGraphics, status]);
 
   useEffect(() => {
     if (pointAddressClickEvent.current || hoverEvent.current) {
@@ -199,16 +237,22 @@ function AddWellDetails() {
         const index = selectedWells.findIndex((item) => item.id === graphic.attributes.id);
 
         if (index > -1) {
+          graphic.attributes.selected = false;
+          graphic.symbol = CompletedWellsSymbol.clone();
+
           remove(index);
-          setSelectedWells(selectedWells.splice(index, 1));
+          selectedWells.splice(index, 1);
+          setSelectedWells([...selectedWells]);
 
           return;
         }
 
-        const wells = [...selectedWells, graphic.attributes];
+        graphic.attributes.selected = true;
+        graphic.symbol = CompletedWellsSymbol.clone();
 
-        setSelectedWells(wells);
-        append(graphic.attributes);
+        setSelectedWells([...selectedWells, graphic.attributes]);
+
+        append({ ...graphic.attributes, key: graphic.attributes.id });
       });
     });
 
@@ -228,10 +272,10 @@ function AddWellDetails() {
 
     formData.append('hydrogeologicCharacterization', submittedData.hydrogeologicCharacterization);
     formData.append('constructionDetails', submittedData.constructionDetails);
-    formData.append('injectateCharacteristics', submittedData.injectateCharacteristics);
+    formData.append('injectateCharacterization', submittedData.injectateCharacterization);
 
     formData.append('constructionDetailsFile', submittedData.constructionDetailsFile);
-    formData.append('injectateCharacteristicsFile', submittedData.injectateCharacteristicsFile);
+    formData.append('injectateCharacterizationFile', submittedData.injectateCharacterizationFile);
 
     mutate(formData);
   };
@@ -250,17 +294,14 @@ function AddWellDetails() {
                 <div className="flex flex-col text-center justify-items-center">
                   <Label id="wellsRemaining" />
                   <span className="text-5xl font-extrabold text-red-700">
-                    {wellsRemaining - (selectedWells?.length ?? 0)}
-                  </span>
-                  <span className="text-base border-t border-gray-100">
-                    <ErrorMessage errors={formState.errors} name="selectedWells" as={ErrorMessageTag} />
+                    {wellGraphics?.filter((x) => !x.attributes.complete).length}
                   </span>
                 </div>
               </div>
             </div>
           </GridHeading>
           <div className="md:mt-0 md:col-span-2">
-            <form onSubmit={handleSubmit((ok) => console.log(ok))}>
+            <form onSubmit={handleSubmit(updateWells)}>
               <div className="overflow-hidden shadow sm:rounded-md">
                 <div className="bg-white">
                   <div className="grid grid-cols-6">
@@ -313,6 +354,12 @@ function AddWellDetails() {
                             errors={formState.errors}
                           />
                         </div>
+                        <span className="text-2xl font-extrabold">
+                          {selectedWells?.length ?? 0} wells selected
+                          <span className="text-base border-gray-100">
+                            <ErrorMessage errors={formState.errors} name="selectedWells" as={ErrorMessageTag} />
+                          </span>
+                        </span>
                       </section>
                     </div>
                   </div>
