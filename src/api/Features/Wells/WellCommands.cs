@@ -90,14 +90,20 @@ namespace api.Features {
         _log = log;
         _metadata = metadata;
       }
-      public async Task<Well> Handle(Command message, CancellationToken cancellationToken) {
-        _log.ForContext("input", message)
+      public async Task<Well> Handle(Command request, CancellationToken cancellationToken) {
+        _log.ForContext("input", request)
           .ForContext("verb", "PUT")
           .Debug("/api/well");
 
-        await _context.Wells.FindAsync(message.Wells.SelectedWells.Cast<object>().ToArray(), cancellationToken);
+        var wells = await _context.Wells
+          .Where(x =>  request.Wells.SelectedWells.Contains(x.Id))
+          .ToListAsync(cancellationToken);
 
-        // await _context.SaveChangesAsync(cancellationToken);
+        foreach (var well in wells) {
+            request.Wells.Update(well);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         // await _publisher.Publish(new SiteNotifications.EditNotification(site.Id), cancellationToken);
 

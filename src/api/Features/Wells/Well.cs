@@ -49,6 +49,9 @@ namespace api.Features {
       Status = WellLookup.OperatingStatus(well.Status);
       Count = well.Quantity ?? 0;
       Geometry = well.Geometry ?? "{}";
+      ConstructionDetails = well.ConstructionDetails;
+      InjectateCharacterization = well.InjectateCharacterization;
+      HydrogeologicCharacterization = well.HydrogeologicCharacterization;
     }
 
     public int Id { get; }
@@ -57,6 +60,18 @@ namespace api.Features {
     public int Count { get; }
     public string Geometry { get; }
     public string Status { get; }
+    public string? ConstructionDetails { get; }
+    public string? InjectateCharacterization { get; }
+    public string? HydrogeologicCharacterization { get; }
+    public bool WellDetailsComplete {
+      get {
+        if (SubClass == 5002) {
+            return !string.IsNullOrEmpty(ConstructionDetails) && !string.IsNullOrEmpty(InjectateCharacterization) && !string.IsNullOrEmpty(HydrogeologicCharacterization);
+        }
+
+        return !string.IsNullOrEmpty(ConstructionDetails);
+      }
+    }
   }
   public class WellInput {
     public int WellId { get; set; }
@@ -72,15 +87,15 @@ namespace api.Features {
     public string? RemediationDescription { get; set; }
     public int? RemediationType { get; set; }
     public string? RemediationProjectId { get; set; }
+    public string? ConstructionDetails { get; set; }
+    public string? InjectateCharacterization { get; set; }
+    public string? HydrogeologicCharacterization { get; set; }
   }
 
   public class WellDetailInput : WellInput {
     public int[] SelectedWells { get; set; } = Array.Empty<int>();
     public IFormFile? ConstructionDetailsFile { get; set; }
-    public IFormFile? InjectateCharacteristicsFile { get; set; }
-    public string? ConstructionDetails { get; set; }
-    public string? InjectateCharacteristics { get; set; }
-    public string? HydrogeologicCharacterization { get; set; }
+    public IFormFile? InjectateCharacterizationFile { get; set; }
   }
   public static class WellLookup {
     public static string OperatingStatus(string? key, string missingValue = "") {
@@ -102,6 +117,24 @@ namespace api.Features {
       };
 
       return lookup.GetValueOrDefault(key, missingValue);
+    }
+  }
+
+   public static class WellDetailInputExtension {
+    public static Well Update(this WellDetailInput input, Well original) {
+      if (input.ConstructionDetails != null) {
+        original.ConstructionDetails = input.ConstructionDetails;
+      }
+
+      if (input.InjectateCharacterization != null) {
+        original.InjectateCharacterization = input.InjectateCharacterization;
+      }
+
+      if (input.HydrogeologicCharacterization != null) {
+        original.HydrogeologicCharacterization = input.HydrogeologicCharacterization;
+      }
+
+      return original;
     }
   }
 }
