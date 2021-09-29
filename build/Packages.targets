@@ -27,6 +27,8 @@
     <PackageReference Update="ExcelDataReader" Version="3.6.0" />
     <PackageReference Update="System.Text.Encoding.CodePages" Version="5.0.0" />
 
+    <!-- Cloud -->
+    <PackageReference Update="Google.Cloud.Storage.V1" Version="3.5.0" />
   </ItemGroup>
 
 </Project>
