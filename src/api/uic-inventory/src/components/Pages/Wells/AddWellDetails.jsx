@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { Controller, useForm, useFieldArray } from 'react-hook-form';
 import * as yup from 'yup';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
 import ky from 'ky';
@@ -77,37 +77,9 @@ function AddWellDetails() {
     }
   );
 
-  const { control, formState, handleSubmit, register, reset, trigger } = useForm({
+  const { control, formState, handleSubmit, reset, setValue } = useForm({
     resolver: (resolverData, context) => {
       const errors = {};
-      if (
-        (empty(resolverData.constructionDetails) && empty(resolverData.constructionDetailsFile)) ||
-        (!empty(resolverData.constructionDetails) && !empty(resolverData.constructionDetailsFile))
-      ) {
-        errors.constructionDetails = { message: 'Choose to type your response or upload a file' };
-      } else if (!empty(resolverData.constructionDetails)) {
-        try {
-          yup.string().max(2500).required().validateSync(resolverData.constructionDetails);
-        } catch (error) {
-          errors.constructionDetails = { message: error.message };
-        }
-      } else if (!empty(resolverData.constructionDetailsFile)) {
-        try {
-          yup
-            .mixed()
-            .required()
-            .test('constructionDetailsFile', 'File is missing a path', (value) => value.path)
-            .validateSync(resolverData.constructionDetailsFile);
-        } catch (error) {
-          errors.constructionDetailsFile = { message: error.message };
-        }
-      }
-
-      try {
-        yup.string().max(2500).optional().validateSync(resolverData.hydrogeologicCharacterization);
-      } catch (error) {
-        errors.hydrogeologicCharacterization = { message: error.message };
-      }
 
       try {
         yup
@@ -123,27 +95,48 @@ function AddWellDetails() {
         errors.selectedWells = { message: error.message };
       }
 
-      if (context.subClass === 5002) {
-        if (
-          (empty(resolverData.injectateCharacterization) && empty(resolverData.injectateCharacterizationFile)) ||
-          (!empty(resolverData.injectateCharacterization) && !empty(resolverData.injectateCharacterizationFile))
-        ) {
-          errors.injectateCharacterization = { message: 'Choose to type your response or upload a file' };
-        } else if (!empty(resolverData.injectateCharacterization)) {
-          try {
-            yup.string().max(2500).required().validateSync(resolverData.injectateCharacterization);
-          } catch (error) {
-            errors.injectateCharacterization = { message: error.message };
-          }
-        } else if (!empty(resolverData.injectateCharacterizationFile)) {
+      if (empty(resolverData.constructionDetails)) {
+        errors.constructionDetails = { message: 'Choose to type your response or upload a file' };
+      } else if (!empty(resolverData.constructionDetails)) {
+        if (resolverData.constructionDetails?.path) {
           try {
             yup
               .mixed()
               .required()
-              .test('injectateCharacterizationFile', 'File is missing a path', (value) => value.path)
-              .validateSync(resolverData.injectateCharacterizationFile);
+              .test('constructionDetails', 'File is missing a path', (value) => value.path)
+              .validateSync(resolverData.constructionDetails);
           } catch (error) {
-            errors.injectateCharacterizationFile = { message: error.message };
+            errors.constructionDetails = { message: error.message };
+          }
+        } else {
+          try {
+            yup.string().max(2500).required().validateSync(resolverData.constructionDetails);
+          } catch (error) {
+            errors.constructionDetails = { message: error.message };
+          }
+        }
+      }
+
+      if (context.subClass === 5002) {
+        if (empty(resolverData.injectateCharacterization)) {
+          errors.injectateCharacterization = { message: 'Choose to type your response or upload a file' };
+        } else if (!empty(resolverData.injectateCharacterization)) {
+          if (resolverData.injectateCharacterization?.path) {
+            try {
+              yup
+                .mixed()
+                .required()
+                .test('injectateCharacterization', 'File is missing a path', (value) => value.path)
+                .validateSync(resolverData.injectateCharacterization);
+            } catch (error) {
+              errors.injectateCharacterization = { message: error.message };
+            }
+          } else {
+            try {
+              yup.string().max(2500).required().validateSync(resolverData.injectateCharacterization);
+            } catch (error) {
+              errors.injectateCharacterization = { message: error.message };
+            }
           }
         }
       }
@@ -153,13 +146,11 @@ function AddWellDetails() {
     context: { subClass: data?.subClass },
   });
 
+  const { isSubmitSuccessful } = formState;
   // update wells
   const { mutate } = useMutation((body) => ky.put('/api/well', { body }), {
     onSuccess: () => {
       toast.success('Wells updated successfully!');
-      setSelectedWells([]);
-      remove();
-      reset();
       queryClient.invalidateQueries(['inventory', inventoryId]);
     },
     onError: (error) => onRequestError(error, 'We had some trouble updating your wells.'),
@@ -262,6 +253,22 @@ function AddWellDetails() {
     };
   }, [wellGraphics, append, remove, selectedWells]);
 
+  useEffect(() => {
+    if (isSubmitSuccessful) {
+      setSelectedWells([]);
+      remove();
+      reset({
+        selectedWells: [],
+        hydrogeologicCharacterization: '',
+        constructionDetails: '',
+        injectateCharacterization: '',
+
+        constructionDetailsFile: '',
+        injectateCharacterizationFile: '',
+      });
+    }
+  }, [isSubmitSuccessful, remove, reset]);
+
   const updateWells = (submittedData) => {
     const formData = new FormData();
 
@@ -271,11 +278,17 @@ function AddWellDetails() {
     submittedData.selectedWells?.forEach((item) => formData.append('selectedWells[]', item.id));
 
     formData.append('hydrogeologicCharacterization', submittedData.hydrogeologicCharacterization);
-    formData.append('constructionDetails', submittedData.constructionDetails);
-    formData.append('injectateCharacterization', submittedData.injectateCharacterization);
 
-    formData.append('constructionDetailsFile', submittedData.constructionDetailsFile);
-    formData.append('injectateCharacterizationFile', submittedData.injectateCharacterizationFile);
+    if (submittedData.constructionDetails?.path) {
+      formData.append('constructionDetailsFile', submittedData.constructionDetails);
+    } else {
+      formData.append('constructionDetails', submittedData.constructionDetails);
+    }
+    if (submittedData.injectateCharacterization?.path) {
+      formData.append('injectateCharacterizationFile', submittedData.injectateCharacterization);
+    } else {
+      formData.append('injectateCharacterization', submittedData.injectateCharacterization);
+    }
 
     mutate(formData);
   };
@@ -308,64 +321,78 @@ function AddWellDetails() {
                     <div className="col-span-6">
                       <div className="w-full border-b-2 h-96 border-gray-50" ref={mapDiv}></div>
                       <section className="flex flex-col gap-2 px-4 py-5">
-                        <LimitedDropzone
-                          textarea={{
-                            id: 'constructionDetails',
-                            limit: 2500,
-                            rows: '5',
-                            placeholder: 'Type your response or upload a file',
-                          }}
-                          forms={{
-                            errors: formState.errors,
-                            register,
-                            control,
-                            reset,
-                            trigger,
-                          }}
-                          file={{
-                            id: 'constructionDetailsFile',
-                          }}
-                        />
-                        <LimitedDropzone
-                          textarea={{
-                            id: 'injectateCharacterization',
-                            limit: 2500,
-                            rows: '5',
-                            placeholder: 'Type your response or upload a file',
-                          }}
-                          forms={{
-                            errors: formState.errors,
-                            register,
-                            control,
-                            reset,
-                            trigger,
-                          }}
-                          file={{
-                            id: 'injectateCharacterizationFile',
-                          }}
-                        />
-                        <div className="md:col-span-2">
-                          <Label id="hydrogeologicCharacterization" />
-                          <LimitedTextarea
-                            id="hydrogeologicCharacterization"
-                            rows="5"
-                            maxLength={2500}
-                            register={register}
-                            errors={formState.errors}
-                          />
-                        </div>
                         <span className="text-2xl font-extrabold">
                           {selectedWells?.length ?? 0} wells selected
                           <span className="text-base border-gray-100">
                             <ErrorMessage errors={formState.errors} name="selectedWells" as={ErrorMessageTag} />
                           </span>
                         </span>
+                        <Controller
+                          control={control}
+                          name="constructionDetails"
+                          render={({ field, fieldState, formState }) => (
+                            <LimitedDropzone
+                              textarea={{
+                                id: 'constructionDetails',
+                                limit: 2500,
+                                rows: '5',
+                                placeholder: 'Type your response or upload a file',
+                              }}
+                              forms={{
+                                errors: formState.errors,
+                                field,
+                                reset,
+                                fieldState,
+                                setValue,
+                                formState,
+                              }}
+                              file={{
+                                id: 'constructionDetailsFile',
+                              }}
+                            />
+                          )}
+                        />
+                        <Controller
+                          control={control}
+                          name="injectateCharacterization"
+                          render={({ field, fieldState, formState }) => (
+                            <LimitedDropzone
+                              textarea={{
+                                id: 'injectateCharacterization',
+                                limit: 2500,
+                                rows: '5',
+                                placeholder: 'Type your response or upload a file',
+                              }}
+                              forms={{
+                                errors: formState.errors,
+                                field,
+                                reset,
+                                fieldState,
+                                setValue,
+                                formState,
+                              }}
+                              file={{
+                                id: 'injectateCharacterizationFile',
+                              }}
+                            />
+                          )}
+                        />
+                        <div className="md:col-span-2">
+                          <Label id="hydrogeologicCharacterization" />
+                          <Controller
+                            control={control}
+                            name="hydrogeologicCharacterization"
+                            render={({ field }) => (
+                              <LimitedTextarea rows="5" maxLength={2500} field={field} errors={formState.errors} />
+                            )}
+                          />
+                        </div>
                       </section>
                     </div>
                   </div>
                 </div>
                 <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                  <button type="submit">Next</button>
+                  <button type="submit">Update</button>
                 </div>
               </div>
             </form>

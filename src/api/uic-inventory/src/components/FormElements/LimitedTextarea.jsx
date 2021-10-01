@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Controller } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { ErrorMessage } from '@hookform/error-message';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
@@ -9,28 +8,21 @@ import { toast } from 'react-toastify';
 import ErrorMessageTag from './ErrorMessage';
 import { Label } from './TextInput';
 
-export const LimitedTextarea = ({ id, rows, placeholder, value, maxLength, register, errors, className, disabled }) => {
-  const { limit, change, remaining } = useMaxLength({ limit: maxLength });
-  const { onChange, onBlur, ref, name } = register(id);
+export const LimitedTextarea = ({ rows, placeholder, value, maxLength, field, errors, className, disabled }) => {
+  const { limit, remaining } = useMaxLength({ value: field.value, limit: maxLength });
 
   return (
     <div className="relative flex flex-grow">
       <textarea
-        name={name}
         disabled={disabled}
-        id={name}
+        id={field.name}
         rows={rows.toString()}
         type="textarea"
         defaultValue={value}
-        ref={ref}
         maxLength={limit}
         placeholder={placeholder}
         className={clsx('px-2 rounded', className)}
-        onBlur={onBlur}
-        onChange={(e) => {
-          onChange(e);
-          change(e);
-        }}
+        {...field}
       ></textarea>
       <CharactersRemaining limit={limit} remaining={remaining} />
       <ErrorMessage errors={errors} name={name} as={ErrorMessageTag} />
@@ -81,13 +73,9 @@ LimitedTextarea.defaultProps = {
 };
 
 export const useMaxLength = ({ value, limit }) => {
-  const [length, setLength] = useState(value?.length || 0);
-  const change = (event) => setLength(event.target.value.length);
-
   return {
-    change,
     limit,
-    remaining: limit - length,
+    remaining: limit - (value?.length || 0),
   };
 };
 
@@ -136,9 +124,9 @@ export const CharactersRemaining = ({ remaining, limit }) => {
 
 const acceptableFileTypes = ['.pdf', '.doc', '.docx', '.jpeg', '.jpg', '.png'];
 
-export const LimitedDropzone = ({ textarea, forms, file }) => {
+export const LimitedDropzone = ({ textarea, forms }) => {
   const [files, setFiles] = useState([]);
-  const { limit, change, remaining } = useMaxLength({ limit: textarea.limit });
+  const { limit, remaining } = useMaxLength({ value: forms.field.value, limit: textarea.limit });
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     noClick: true,
     noKeyboard: true,
@@ -148,8 +136,17 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
     onDropRejected: () => {
       toast.error('File type not accepted');
     },
-    onDrop: setFiles,
+    onDrop: (acceptedFiles) => {
+      setFiles(acceptedFiles);
+      forms.setValue(forms.field.name, acceptedFiles[0], { shouldValidate: true, shouldDirty: true });
+    },
   });
+
+  useEffect(() => {
+    if (forms.formState.isSubmitSuccessful) {
+      setFiles([]);
+    }
+  }, [forms.formState.isSubmitSuccessful]);
 
   return (
     <section className="grid content-start grid-cols-2" {...getRootProps()}>
@@ -160,31 +157,19 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
           'col-span-2': remaining < limit,
         })}
       >
-        {forms.control && (
-          <Controller
-            name={textarea.id}
-            control={forms?.control}
-            render={({ field }) => (
-              <textarea
-                className={clsx('px-2', {
-                  'rounded-l': remaining === limit,
-                  rounded: remaining < limit,
-                })}
-                rows={textarea.rows}
-                disabled={textarea.disabled}
-                type="textarea"
-                placeholder={textarea.placeholder}
-                defaultValue={textarea.value}
-                maxLength={limit}
-                {...field}
-                onChange={(e) => {
-                  change(e);
-                  field.onChange(e);
-                }}
-              />
-            )}
-          />
-        )}
+        <textarea
+          className={clsx('px-2', {
+            'rounded-l': remaining === limit,
+            rounded: remaining < limit,
+          })}
+          rows={textarea.rows}
+          disabled={textarea.disabled}
+          type="textarea"
+          placeholder={textarea.placeholder}
+          defaultValue={textarea.value}
+          maxLength={limit}
+          {...(files.length >= 1 ? {} : forms.field)}
+        />
         <CharactersRemaining limit={limit} remaining={remaining} />
       </section>
       <section
@@ -195,27 +180,20 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
         })}
       >
         <div className={clsx('flex flex-col justify-around flex-grow px-2')}>
-          {forms.control && (
-            <Controller
-              name={file.id}
-              control={forms?.control}
-              render={({ field }) => (
-                <input
-                  {...getInputProps({
-                    onChange: (e) => {
-                      field.onChange(e.target.files[0]);
-                      forms.trigger();
-                    },
-                  })}
-                />
-              )}
-            />
-          )}
+          <input
+            {...(files.length > 0 ? forms.field : {})}
+            {...getInputProps({
+              onChange: (e) => {
+                forms.field.onChange(e.target.files[0]);
+              },
+            })}
+            value=""
+          />
           <DropzoneMessaging
             isDragActive={isDragActive}
             files={files}
             reset={() => {
-              forms.reset({ [file.id]: undefined });
+              forms.reset({ [forms.field.name]: '' });
               setFiles([]);
             }}
           />
@@ -227,11 +205,13 @@ export const LimitedDropzone = ({ textarea, forms, file }) => {
           )}
         </div>
       </section>
-      {forms.errors[textarea.id] && (
-        <div className="col-span-2">
-          <ErrorMessage errors={forms.errors} name={textarea.id} as={ErrorMessageTag} />
-        </div>
-      )}
+      <div className="col-span-2">
+        <ErrorMessage
+          errors={{ [forms.field.name]: forms?.fieldState?.error }}
+          name={forms.field.name}
+          as={ErrorMessageTag}
+        />
+      </div>
     </section>
   );
 };
