@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useFieldArray } from 'react-hook-form';
-import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
 import ky from 'ky';
 import { ErrorMessage } from '@hookform/error-message';
@@ -10,7 +10,7 @@ import Point from '@arcgis/core/geometry/Point';
 import Viewpoint from '@arcgis/core/Viewpoint';
 import { PinSymbol, PolygonSymbol } from '../../MapElements/MarkerSymbols';
 import { Chrome, onRequestError, toast, useParams } from '../../PageElements';
-import { GridHeading, LimitedTextarea, LimitedDropzone, Label } from '../../FormElements';
+import { GridHeading, LimitedTextarea, LimitedDropzone, Label, WellDetailSchema as schema } from '../../FormElements';
 import { useWebMap, useViewPointZooming, useGraphicManager } from '../../Hooks';
 import { AuthContext } from '../../../AuthProvider';
 import ErrorMessageTag from '../../FormElements/ErrorMessage';
@@ -66,6 +66,7 @@ function AddWellDetails() {
   const pointAddressClickEvent = useRef(null);
   const hoverEvent = useRef(null);
   const [selectedWells, setSelectedWells] = useState([]);
+  const [wellsRemaining, setWellsRemaining] = useState(0);
 
   // get site and inventory data
   const { status, data } = useQuery(
@@ -78,71 +79,7 @@ function AddWellDetails() {
   );
 
   const { control, formState, handleSubmit, reset, setValue } = useForm({
-    resolver: (resolverData, context) => {
-      const errors = {};
-
-      try {
-        yup
-          .array(
-            yup.object().shape({
-              id: yup.number().integer().positive(),
-            })
-          )
-          .min(1)
-          .typeError('You must select at least 1 well')
-          .validateSync(resolverData.selectedWells);
-      } catch (error) {
-        errors.selectedWells = { message: error.message };
-      }
-
-      if (empty(resolverData.constructionDetails)) {
-        errors.constructionDetails = { message: 'Choose to type your response or upload a file' };
-      } else if (!empty(resolverData.constructionDetails)) {
-        if (resolverData.constructionDetails?.path) {
-          try {
-            yup
-              .mixed()
-              .required()
-              .test('constructionDetails', 'File is missing a path', (value) => value.path)
-              .validateSync(resolverData.constructionDetails);
-          } catch (error) {
-            errors.constructionDetails = { message: error.message };
-          }
-        } else {
-          try {
-            yup.string().max(2500).required().validateSync(resolverData.constructionDetails);
-          } catch (error) {
-            errors.constructionDetails = { message: error.message };
-          }
-        }
-      }
-
-      if (context.subClass === 5002) {
-        if (empty(resolverData.injectateCharacterization)) {
-          errors.injectateCharacterization = { message: 'Choose to type your response or upload a file' };
-        } else if (!empty(resolverData.injectateCharacterization)) {
-          if (resolverData.injectateCharacterization?.path) {
-            try {
-              yup
-                .mixed()
-                .required()
-                .test('injectateCharacterization', 'File is missing a path', (value) => value.path)
-                .validateSync(resolverData.injectateCharacterization);
-            } catch (error) {
-              errors.injectateCharacterization = { message: error.message };
-            }
-          } else {
-            try {
-              yup.string().max(2500).required().validateSync(resolverData.injectateCharacterization);
-            } catch (error) {
-              errors.injectateCharacterization = { message: error.message };
-            }
-          }
-        }
-      }
-
-      return { values: errors ? resolverData : {}, errors: errors };
-    },
+    resolver: yupResolver(schema),
     context: { subClass: data?.subClass },
   });
 
@@ -203,6 +140,8 @@ function AddWellDetails() {
           symbol: CompletedWellsSymbol,
         })
     );
+
+    setWellsRemaining(wells?.filter((x) => !x.attributes.complete).length || 0);
 
     setExistingPointGraphics(wells);
   }, [data, setExistingPointGraphics, status]);
@@ -277,17 +216,17 @@ function AddWellDetails() {
     formData.append('siteId', parseInt(siteId));
     submittedData.selectedWells?.forEach((item) => formData.append('selectedWells[]', item.id));
 
-    formData.append('hydrogeologicCharacterization', submittedData.hydrogeologicCharacterization);
+    formData.append('hydrogeologicCharacterization', submittedData.hydrogeologicCharacterization || null);
 
     if (submittedData.constructionDetails?.path) {
       formData.append('constructionDetailsFile', submittedData.constructionDetails);
     } else {
-      formData.append('constructionDetails', submittedData.constructionDetails);
+      formData.append('constructionDetails', submittedData.constructionDetails || null);
     }
     if (submittedData.injectateCharacterization?.path) {
       formData.append('injectateCharacterizationFile', submittedData.injectateCharacterization);
     } else {
-      formData.append('injectateCharacterization', submittedData.injectateCharacterization);
+      formData.append('injectateCharacterization', submittedData.injectateCharacterization || null);
     }
 
     mutate(formData);
@@ -306,9 +245,7 @@ function AddWellDetails() {
               <div className="flex justify-around">
                 <div className="flex flex-col text-center justify-items-center">
                   <Label id="wellsRemaining" />
-                  <span className="text-5xl font-extrabold text-red-700">
-                    {wellGraphics?.filter((x) => !x.attributes.complete).length}
-                  </span>
+                  <span className="text-5xl font-extrabold text-red-700">{wellsRemaining}</span>
                 </div>
               </div>
             </div>
