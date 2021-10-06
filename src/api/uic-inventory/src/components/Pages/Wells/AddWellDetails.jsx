@@ -328,8 +328,13 @@ function AddWellDetails() {
                     </div>
                   </div>
                 </div>
-                <div className="px-4 py-3 text-right bg-gray-100 sm:px-6">
-                  <button type="submit">Update</button>
+                <div className="flex justify-around px-4 py-3 text-right bg-gray-100 sm:px-6">
+                  <button type="submit" disabled={(selectedWells?.length ?? 0) === 0}>
+                    Update
+                  </button>
+                  <button type="button" disabled={wellsRemaining > 0}>
+                    Next
+                  </button>
                 </div>
               </div>
             </form>
