@@ -123,15 +123,27 @@ namespace api.Features {
    public static class WellDetailInputExtension {
     public static Well Update(this WellDetailInput input, Well original) {
       if (input.ConstructionDetails != null) {
-        original.ConstructionDetails = input.ConstructionDetails;
+        if (input.ConstructionDetails == "null") {
+          original.ConstructionDetails = null;
+        } else {
+          original.ConstructionDetails = input.ConstructionDetails;
+        }
       }
 
       if (input.InjectateCharacterization != null) {
-        original.InjectateCharacterization = input.InjectateCharacterization;
+        if (input.InjectateCharacterization == "null") {
+          original.InjectateCharacterization = null;
+        } else {
+          original.InjectateCharacterization = input.InjectateCharacterization;
+        }
       }
 
       if (input.HydrogeologicCharacterization != null) {
-        original.HydrogeologicCharacterization = input.HydrogeologicCharacterization;
+        if (input.HydrogeologicCharacterization == "null") {
+          original.HydrogeologicCharacterization = null;
+        } else {
+          original.HydrogeologicCharacterization = input.HydrogeologicCharacterization;
+        }
       }
 
       return original;
