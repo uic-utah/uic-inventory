@@ -6,27 +6,75 @@ on:
       - main
       - dev
 
+concurrency:
+  group: "${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     environment:
       name: dev
 
     steps:
-      - name: Checkout project
-        uses: actions/checkout@v2
+      - name: ⬇️ Set up code
+        uses: actions/checkout@v3
 
-      - uses: google-github-actions/setup-gcloud@master
+      - id: auth
+        name: 🗝️ Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
         with:
-          service_account_key: ${{ secrets.SERVICE_ACCOUNT }}
-          project_id: ${{ secrets.PROJECT_ID }}
+          create_credentials_file: true
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
 
-      - name: Setup docker
-        run: gcloud --quiet auth configure-docker
+      - name: 🐳 Set up Docker Buildx
+        id: builder
+        uses: docker/setup-buildx-action@v1
 
-      - name: Build image
-        run: docker build --build-arg VITE_API_KEY=${{ secrets.AGRC_API_KEY }} --file ./src/api/Api.Dockerfile --tag gcr.io/${{ secrets.PROJECT_ID }}/api .
+      - name: 🗝️ Authenticate Docker to Google CLoud
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-      # Push the Docker image to Google Container Registry
-      - name: Publish image
-        run: docker push "gcr.io/${{ secrets.PROJECT_ID }}/api"
+      - name: 📦 Build and push image
+        uses: docker/build-push-action@v2
+        with:
+          file: ./src/api/Api.Dockerfile
+          builder: ${{ steps.builder.outputs.name }}
+          build-args: VITE_API_KEY=${{ secrets.AGRC_API_KEY }}
+          tags: gcr.io/${{ secrets.PROJECT_ID }}/api
+          context: .
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v0
+        with:
+          service: uic-inventory-api
+          image: gcr.io/${{ secrets.PROJECT_ID }}/api
+          region: us-central1
+          flags: |
+            --service-account=cloud-run-sa@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+            --set-cloudsql-instances=${{ secrets.CLOUD_SQL }}
+            --vpc-connector=${{ secrets.VPC }}
+            --vpc-egress=private-ranges-only
+            --max-instances=5
+            --concurrency=250
+            --cpu=1
+            --memory=512Mi
+            --timeout=5m
+          env_vars: >
+            ASPNETCORE_URLS=http://+:8080,
+            ASPNETCORE_ENVIRONMENT=Production,
+            STORAGE_BUCKET=${{ secrets.PROJECT_ID }}-documents
+          secrets: |
+            /secrets/dotnet/appsettings.Production.json=dotnet-appsettings:latest

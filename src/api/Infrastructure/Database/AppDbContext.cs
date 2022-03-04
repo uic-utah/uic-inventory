@@ -1,13 +1,16 @@
-using api.GraphQL;
+using System;
+using api.Features;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace api.Infrastructure {
-  public partial class AppDbContext : DbContext {
+  public partial class AppDbContext : DbContext, IAppDbContext {
     static AppDbContext() {
       NpgsqlConnection.GlobalTypeMapper.MapEnum<AccessLevels>();
       NpgsqlConnection.GlobalTypeMapper.MapEnum<NotificationTypes>();
       NpgsqlConnection.GlobalTypeMapper.MapEnum<ContactTypes>();
+      NpgsqlConnection.GlobalTypeMapper.MapEnum<SiteStatus>();
+      NpgsqlConnection.GlobalTypeMapper.MapEnum<InventoryStatus>();
     }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -17,6 +20,8 @@ namespace api.Infrastructure {
     public virtual DbSet<Notification> Notifications { get; set; } = default!;
     public virtual DbSet<NotificationReceipt> NotificationReceipts { get; set; } = default!;
     public virtual DbSet<Site> Sites { get; set; } = default!;
+    public virtual DbSet<Inventory> Inventories { get; set; } = default!;
+    public virtual DbSet<Well> Wells { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       modelBuilder.HasDefaultSchema("public").HasPostgresEnum("access_level", new[] { "elevated", "standard" })
@@ -136,7 +141,7 @@ namespace api.Infrastructure {
         entity.HasOne(d => d.Site)
             .WithMany(p => p.Contacts)
             .HasForeignKey(d => d.SiteFk)
-            .OnDelete(DeleteBehavior.ClientSetNull)
+            .OnDelete(DeleteBehavior.ClientCascade)
             .HasConstraintName("contact_to_site_fk");
       }).HasPostgresEnum<ContactTypes>("public", "contact_types");
 
@@ -191,30 +196,169 @@ namespace api.Infrastructure {
         entity.ToTable("sites");
 
         entity.Property(e => e.Id)
-            .HasColumnName("id");
+          .HasColumnName("id");
 
-        entity.Property(e => e.Name).IsRequired()
-                    .HasMaxLength(128)
-                    .HasColumnName("name");
+        entity.Property(e => e.Name)
+          .IsRequired()
+          .HasMaxLength(128)
+          .HasColumnName("name");
 
         entity.Property(e => e.Ownership)
-                .IsRequired()
-                .HasMaxLength(2)
-                .HasColumnName("ownership");
+          .IsRequired()
+          .HasMaxLength(2)
+          .HasColumnName("ownership");
 
-        entity.Property(e => e.NaicsPrimary).HasColumnName("naics_primary");
+        entity.Property(e => e.NaicsPrimary)
+          .HasColumnName("naics_primary");
 
-        entity.Property(e => e.NaicsTitle).HasColumnName("naics_title")
+        entity.Property(e => e.NaicsTitle)
+          .HasColumnName("naics_title")
           .IsRequired()
           .HasMaxLength(128);
 
-        entity.Property(e => e.AccountFk).HasColumnName("account_fk");
+        entity.Property(e => e.AccountFk)
+          .HasColumnName("account_fk");
 
-        entity.HasOne(d => d.Account)
+        entity.HasOne<Account>(d => d.Account)
             .WithMany(p => p.Sites)
             .HasForeignKey(d => d.AccountFk)
             .OnDelete(DeleteBehavior.ClientSetNull)
             .HasConstraintName("site_to_account_fk");
+      });
+
+      modelBuilder.Entity<Well>(entity => {
+        entity.ToTable("wells");
+
+        entity.Property(e => e.Id)
+            .HasColumnName("id");
+
+        entity.Property(e => e.AccountFk)
+            .HasColumnName("account_fk");
+
+        entity.Property(e => e.SiteFk)
+            .HasColumnName("site_fk");
+
+        entity.Property(e => e.InventoryFk)
+          .HasColumnName("inventory_fk");
+
+        entity.Property(e => e.Description)
+          .HasColumnName("description");
+
+        entity.Property(e => e.Status)
+          .HasColumnName("status");
+
+        entity.Property(e => e.RemediationDescription)
+          .HasColumnName("remediation_description");
+
+        entity.Property(e => e.RemediationType)
+          .HasColumnName("remediation_type");
+
+        entity.Property(e => e.RemediationProjectId)
+          .HasColumnName("remediation_project_id");
+
+        entity.Property(e => e.Quantity)
+          .HasColumnName("quantity");
+
+        entity.Property(e => e.Geometry)
+          .HasColumnName("geometry");
+
+        entity.Property(e => e.CreatedOn)
+          .HasDefaultValueSql("CURRENT_TIMESTAMP")
+          .HasColumnName("created_on");
+
+        entity.Property(e => e.WellName)
+            .HasMaxLength(128)
+            .HasColumnName("well_name");
+
+        entity.Property(e => e.SubClass)
+            .IsRequired()
+            .HasColumnName("sub_class");
+
+        entity.Property(e => e.ConstructionDetails)
+            .HasMaxLength(2500)
+            .HasColumnName("construction_details");
+
+        entity.Property(e => e.InjectateCharacterization)
+            .HasMaxLength(2500)
+            .HasColumnName("injectate_characterization");
+
+        entity.Property(e => e.HydrogeologicCharacterization)
+            .HasMaxLength(2500)
+            .HasColumnName("hydrogeologic_characterization");
+
+        entity.HasOne<Account>(d => d.Account)
+            .WithMany(p => p.Wells)
+            .HasForeignKey(d => d.AccountFk)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("well_to_account_fk");
+
+        entity.HasOne<Site>(d => d.Site)
+            .WithMany(p => p.Wells)
+            .HasForeignKey(d => d.SiteFk)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("well_to_site_fk");
+
+        entity.HasOne<Inventory>(d => d.Inventory)
+            .WithMany(p => p.Wells)
+            .HasForeignKey(d => d.InventoryFk)
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("well_to_inventory_fk");
+      });
+
+      modelBuilder.Entity<Inventory>(entity => {
+        entity.Property(e => e.Id)
+        .HasColumnName("id");
+
+        entity.Property(e => e.SiteFk)
+          .IsRequired()
+          .HasColumnName("site_fk");
+
+        entity.Property(e => e.AccountFk)
+          .IsRequired()
+          .HasColumnName("account_fk");
+
+        entity.Property(e => e.SubClass)
+          .IsRequired()
+          .HasColumnName("sub_class");
+
+        entity.Property(e => e.OrderNumber)
+          .IsRequired()
+          .HasMaxLength(128)
+          .HasColumnName("order_number");
+
+        entity.Property(e => e.Signature)
+          .HasMaxLength(128)
+          .HasColumnName("signature");
+
+        entity.Property<DateTime?>("SubmittedOn")
+          .HasColumnName("submitted_on");
+
+        entity.Property<DateTime?>("CreatedOn")
+          .HasDefaultValueSql("CURRENT_TIMESTAMP()")
+          .HasColumnName("created_on");
+
+        entity.HasKey("Id")
+          .HasName("inventory_primary_key");
+
+        entity.HasIndex("AccountFk")
+          .HasDatabaseName("ix_inventory_account_fk");
+
+        entity.HasIndex("SiteFk")
+          .HasDatabaseName("ix_inventory_site_fk");
+
+        entity.ToTable("inventories");
+
+        entity.HasOne<Account>(d => d.Account)
+          .WithMany(p => p.Inventories)
+          .HasForeignKey(d => d.AccountFk)
+          .HasConstraintName("inventory_to_account_fk")
+          .OnDelete(DeleteBehavior.NoAction);
+
+        entity.HasOne<Site>(d => d.Site)
+          .WithMany(p => p.Inventories)
+          .HasForeignKey(d => d.SiteFk)
+          .HasConstraintName("inventory_to_site_fk")
+          .IsRequired();
       });
 
       OnModelCreatingPartial(modelBuilder);

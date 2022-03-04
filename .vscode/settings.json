@@ -1,31 +1,58 @@
 {
   "cSpell.words": [
     "agrc",
+    "apos",
+    "appsettings",
     "arcgis",
+    "ARDA",
     "aspnetcore",
+    "Centerlines",
+    "cloudrun",
+    "cloudsql",
     "clsx",
+    "combobox",
+    "Dropzone",
+    "edocs",
     "esbuild",
+    "esrijson",
+    "gcloud",
     "headlessui",
     "heroicons",
     "hookform",
+    "hydrogeologic",
+    "injectate",
     "jsonb",
+    "Listbox",
     "naics",
+    "noopener",
+    "noreferrer",
     "npgsql",
     "oidc",
     "openid",
     "pkce",
     "postgres",
+    "semibold",
     "serilog",
+    "Subsector",
     "tailwindcss",
+    "tippyjs",
     "toastify",
     "upsert",
     "vite",
-    "vitejs"
+    "vitejs",
+    "wkid",
+    "Xunit"
   ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "javascript.suggest.autoImports": false
+  "javascript.suggest.autoImports": false,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.autoStart": true,
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  }
 }

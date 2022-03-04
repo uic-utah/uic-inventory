@@ -1,10 +1,11 @@
-import ErrorMessageTag from './ErrorMessage';
 import { ErrorMessage } from '@hookform/error-message';
+import clsx from 'clsx';
+import ErrorMessageTag from './ErrorMessage';
 import { camelToProper } from './Helpers';
 
 function TextInput({ className, register, errors, id, text, type, readOnly = false }) {
   return (
-    <>
+    <div>
       <Label id={id} text={text} />
       <input
         type={type || 'text'}
@@ -16,12 +17,12 @@ function TextInput({ className, register, errors, id, text, type, readOnly = fal
       />
 
       <ErrorMessage errors={errors} name={id} as={ErrorMessageTag} />
-    </>
+    </div>
   );
 }
 
-export const Label = ({ id, text }) => (
-  <label htmlFor={id} className="block font-medium text-gray-700">
+export const Label = ({ id, text, className }) => (
+  <label htmlFor={id} className={clsx(className, 'block font-medium text-gray-700')}>
     {text || camelToProper(id)}
   </label>
 );

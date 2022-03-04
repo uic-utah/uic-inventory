@@ -1,15 +1,14 @@
 module.exports = {
-  mode: 'jit',
-  purge: ['./index.html', './src/**/*.{js,jsx}', './node_modules/@agrc/dart-board/**/*.js'],
-  darkMode: false, // or 'media' or 'class'
+  content: ['./index.html', './src/**/*.{js,jsx}', './node_modules/@agrc/dart-board/**/*.js'],
   theme: {
     minHeight: {
       profile: '36em',
     },
-    extend: {},
-  },
-  variants: {
-    extend: {},
+    extend: {
+      blur: {
+        xs: '1px',
+      },
+    },
   },
   plugins: [require('@tailwindcss/forms')],
 };

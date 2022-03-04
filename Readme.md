@@ -12,6 +12,8 @@
 ./scripts/rebuild_db.sh
 ```
 
+chmod +x ./scripts/yada yada
+
 ## Secrets
 
 ```sh
@@ -27,4 +29,8 @@ dotnet user-secrets set "CloudSql:Port" "5432"
 dotnet user-secrets set "CloudSql:Db" "app"
 dotnet user-secrets set "CloudSql:Username" "postgres"
 dotnet user-secrets set "CloudSql:Password" "what password"
+
+dotnet user-secrets set "App:AdminEmail" "you@email.com"
+dotnet user-secrets set "SendGrid:Key" "your send grid api key"
+dotnet user-secrets set "STORAGE_BUCKET" "yor send grid api key"
 ```

@@ -1,10 +1,7 @@
+import { useState } from 'react';
 import useNaicsCodes from './useNaicsCodes';
 import { ChevronLeftIcon } from '@heroicons/react/solid';
 import clsx from 'clsx';
-import { useState } from 'react';
-
-const classes =
-  'flex items-center justify-center p-4 text-center border border-gray-200 rounded-md cursor-pointer h-32 hover:border-blue-800 hover:border-2 overflow-hidden overflow-ellipsis';
 
 const getCodeLevel = (code) => {
   if (!code || code?.length < 2) {
@@ -33,9 +30,13 @@ const getCodeLevel = (code) => {
 
 const history = [];
 
-function NaicsPicker({ updateWith }) {
-  const [code, setCode] = useState();
-  const codes = useNaicsCodes(code);
+export default function NaicsPicker({ updateWith }) {
+  const [code, setCode] = useState(undefined);
+  const [codes, isPreviousData] = useNaicsCodes(code);
+  const [selectedItem, setSelectedItem] = useState(undefined);
+
+  let classes =
+    'flex items-center justify-center p-4 text-center border border-gray-200 rounded-md h-32 cursor-pointer hover:border-blue-800 hover:border-2 overflow-hidden text-ellipsis disabled:cursor-wait disabled:filter disabled:blur-xs';
 
   const back = () => {
     history.pop();
@@ -46,22 +47,28 @@ function NaicsPicker({ updateWith }) {
       return setCode(history[index]);
     }
 
-    setCode();
+    setCode(undefined);
   };
 
   const select = (item) => {
+    if (isPreviousData) {
+      return;
+    }
+
     if (!history.includes(item.code)) {
       history.push(item.code);
     }
+
     updateWith(item);
     setCode(item.code);
+    setSelectedItem(`${item.code}${item.value}`);
   };
 
   return (
     <>
       <p className="mb-2 italic text-gray-500">
         For a keyword search and further information about NAICS, please visit the{' '}
-        <a type="primary" href="https://census.gov/naics" target="_blank" rel="noopener">
+        <a meta="primary" href="https://census.gov/naics" target="_blank" rel="noopener noreferrer">
           US Census Bureau NAICS website
         </a>
         .
@@ -80,8 +87,8 @@ function NaicsPicker({ updateWith }) {
               </button>
               <span
                 className={clsx(
-                  'relative inline-flex items-center px-4 py-2 text-sm font-medium  bg-white border border-gray-300 hover:bg-gray-50',
-                  code?.toString().length === 6 ? 'text-green-500 font-semibold' : 'text-gray-700'
+                  'relative inline-flex items-center px-4 py-2 text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50',
+                  code?.toString().length === 6 ? 'text-emerald-500 font-semibold' : 'text-gray-700'
                 )}
               >
                 {getCodeLevel(code)}
@@ -89,7 +96,7 @@ function NaicsPicker({ updateWith }) {
               <span
                 className={clsx(
                   'relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50',
-                  code?.toString().length === 6 ? 'text-green-500 font-semibold' : 'text-gray-700'
+                  code?.toString().length === 6 ? 'text-emerald-500 font-semibold' : 'text-gray-700'
                 )}
               >
                 {code || '?'}
@@ -100,13 +107,16 @@ function NaicsPicker({ updateWith }) {
       </div>
       <div className="grid items-stretch grid-cols-2 gap-4 overflow-auto sm:grid-cols-3 md:grid-cols-5">
         {codes?.map((item) => (
-          <div key={item.code + item.value} className={classes} onClick={() => select(item)}>
+          <button
+            key={item.code + item.value}
+            className={clsx(classes, { 'bg-blue-100 border-blue-500': item.code + item.value === selectedItem })}
+            disabled={isPreviousData}
+            onClick={() => select(item)}
+          >
             {item.value}
-          </div>
+          </button>
         ))}
       </div>
     </>
   );
 }
-
-export default NaicsPicker;

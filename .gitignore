@@ -360,5 +360,15 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Docker
 docker-compose.override.yaml
+
+# MacOS trash
 .DS_Store
+
+# Javascript
+.eslintcache
+
+# Secrets
+appsettings.*.json

@@ -1,10 +1,12 @@
-import { useQuery, useMutation, AccountMutation, AccountQuery } from '../GraphQL';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Chrome, toast, useParams } from '../PageElements';
+import { Chrome, onRequestError, toast, useHistory, useParams } from '../PageElements';
 import { Facebook } from 'react-content-loader';
 import { Switch } from '@headlessui/react';
 import { AuthContext } from '../../AuthProvider';
+import { useQuery, useQueryClient, useMutation } from 'react-query';
+import ky from 'ky';
+import clsx from 'clsx';
 import {
   ErrorMessage,
   ErrorMessageTag,
@@ -21,12 +23,27 @@ import { useContext, useEffect } from 'react';
 export function Profile() {
   const { id } = useParams();
   const { authInfo } = useContext(AuthContext);
-  const { loading, error, data, refetch } = useQuery(AccountQuery, { variables: { id: parseInt(id || authInfo.id) } });
-  const [updateAccount] = useMutation(AccountMutation);
+  const history = useHistory();
+
+  const queryClient = useQueryClient();
+  const { status, error, data } = useQuery(
+    ['profile', parseInt(id || authInfo.id)],
+    () => ky.get(`/api/account/${parseInt(id || authInfo.id)}`).json(),
+    {
+      enabled: id || authInfo?.id ? true : false,
+      onError: (error) => onRequestError(error, 'We had some trouble finding your profile.'),
+    }
+  );
+  const { mutate } = useMutation((data) => ky.put('/api/account', { json: { ...data, id: authInfo.id } }).json(), {
+    onSuccess: () => queryClient.invalidateQueries('auth'),
+    onError: (error) => onRequestError(error, 'We had some trouble updating your profile.'),
+  });
+
   const { control, formState, handleSubmit, register, reset } = useForm({
     resolver: yupResolver(schema),
   });
-  //! pull isDirty from form state to activate proxy
+
+  //* pull isDirty from form state to activate proxy
   const { isDirty } = formState;
   const {
     getValues: notificationValues,
@@ -35,16 +52,16 @@ export function Profile() {
     formState: notificationFormState,
     reset: notificationReset,
   } = useForm({});
-  //! pull isDirty from form state to activate proxy
+  //* pull isDirty from form state to activate proxy
   const { isDirty: isNotificationDirty } = notificationFormState;
 
   // fill form fields with existing data
   useEffect(() => {
-    if (data?.accountById) {
-      const defaults = data?.accountById;
+    if (data) {
+      const defaults = data;
 
       for (let name in defaults) {
-        if (defaults.hasOwnProperty(name) && defaults[name] === null) {
+        if (Object.prototype.hasOwnProperty.call(defaults, 'name') && defaults[name] === null) {
           defaults[name] = '';
         }
       }
@@ -72,33 +89,25 @@ export function Profile() {
       input[key] = formData[key];
     }
 
-    const { errors } = await updateAccount({
-      variables: {
-        input: { ...input },
-      },
-    });
-
-    if (errors) {
-      return toast.error('We had some trouble updating your profile');
-      // TODO: log error
-    }
+    await mutate(input);
 
     updateDefaultValues(formData);
-    refetch();
 
     toast.success('Profile updated successfully!');
+    history.goBack();
   };
 
   return (
     <main>
-      <Chrome loading={loading}>
-        {!loading && !error && (
+      <Chrome loading={status === 'loading'}>
+        {status !== 'loading' && !error && (
           <>
             <form onSubmit={handleSubmit((data) => mutateAccount(formState, reset, data))}>
               <PageGrid
                 heading="Personal Information"
                 subtext="Use a permanent address where you can receive mail."
                 submit={true}
+                back={true}
                 disabled={!isDirty}
                 submitLabel="Save"
               >
@@ -162,7 +171,7 @@ export function Profile() {
                 </FormGrid>
               </PageGrid>
             </form>
-            {data?.accountById.access === 'ELEVATED' ? (
+            {data?.access === 'elevated' ? (
               <form
                 onSubmit={handleNotificationSubmit((data) =>
                   mutateAccount(notificationFormState, notificationReset, data)
@@ -188,14 +197,22 @@ export function Profile() {
                           checked={value}
                           id={name}
                           onChange={onChange}
-                          className={`${
-                            value ? 'bg-indigo-600' : 'bg-gray-300'
-                          } relative inline-flex items-center flex-shrink-0 h-6 transition-colors duration-200 ease-in-out border-transparent rounded-full cursor-pointer w-11 b-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700`}
+                          className={clsx(
+                            {
+                              'bg-indigo-600 focus:ring-indigo-500': value,
+                              'bg-gray-300 focus:ring-gray-300': !value,
+                            },
+                            'relative inline-flex items-center h-8 rounded-full w-16 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
+                          )}
                         >
                           <span
-                            className={`${
-                              value ? 'translate-x-5' : 'translate-x-1'
-                            } pointer-events-none inline-block w-5 h-5 transform bg-white rounded-full shadow ease-in-out duration-300 ring-0`}
+                            className={clsx(
+                              {
+                                'translate-x-8 border-indigo-700 bg-gray-100': value,
+                                'translate-x-1 border-gray-400 bg-white': !value,
+                              },
+                              'inline-block w-7 h-7 border-2 border-gray-400 rounded-full transform transition-transform'
+                            )}
                           />
                         </Switch>
                       )}
@@ -206,7 +223,7 @@ export function Profile() {
             ) : null}
           </>
         )}
-        {loading && <Facebook />}
+        {status === 'loading' && <Facebook />}
         {error && (
           <h1>Something went terribly wrong</h1>
           // Log error

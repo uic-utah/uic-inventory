@@ -1,11 +1,14 @@
-import { useQuery, MeQuery } from './components/GraphQL';
+import { useQuery } from 'react-query';
+import ky from 'ky';
 import { createContext, useEffect, useState } from 'react';
 
 export const AuthContext = createContext();
 const Provider = AuthContext.Provider;
 
 export function AuthProvider({ children }) {
-  const { loading, error, data } = useQuery(MeQuery);
+  const { status, error, data } = useQuery('auth', () =>
+    ky.get('/api/me', { timeout: 5000, redirect: 'manual', throwHttpErrors: false }).json()
+  );
   const [authInfo, setAuthInfo] = useState({
     id: null,
     userData: {},
@@ -14,20 +17,20 @@ export function AuthProvider({ children }) {
   const isAuthenticated = () => authInfo.id !== null;
   const receiveNotifications = () => authInfo.userData.receiveNotifications;
   const completeProfile = () => authInfo.userData.profileComplete;
+  const isElevated = () => authInfo.userData.access === 'elevated';
 
   useEffect(() => {
-    if (loading || error) {
+    if (status !== 'success' || error) {
       return;
     }
 
-    setAuthInfo({
-      id: data.me.id,
-      userData: { ...data.me },
-    });
-  }, [loading, error, data]);
+    setAuthInfo(data);
+  }, [status, error, data]);
 
   return (
-    <Provider value={{ error, authInfo, isAuthenticated, receiveNotifications, setAuthInfo, completeProfile }}>
+    <Provider
+      value={{ error, authInfo, isAuthenticated, isElevated, receiveNotifications, setAuthInfo, completeProfile }}
+    >
       {children}
     </Provider>
   );
