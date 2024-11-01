@@ -17,14 +17,14 @@
     <!-- Database -->
     <PackageReference Update="Dapper" Version="2.1.35" />
     <PackageReference Update="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Update="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" />
+    <PackageReference Update="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
     <PackageReference Update="Microsoft.EntityFrameworkCore.Design" Version="8.0.10" />
     <PackageReference Update="EFCORE.NamingConventions" Version="8.0.3" />
     <PackageReference Update="Oracle.ManagedDataAccess.Core" Version="23.6.0" />
 
     <!-- Logging -->
-    <PackageReference Update="Serilog" Version="4.0.2" />
-    <PackageReference Update="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageReference Update="Serilog" Version="4.1.0" />
+    <PackageReference Update="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Update="Serilog.Settings.Configuration" Version="8.0.4" />
     <PackageReference Update="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Update="Serilog.Sinks.GoogleCloudLogging" Version="5.0.0" />
