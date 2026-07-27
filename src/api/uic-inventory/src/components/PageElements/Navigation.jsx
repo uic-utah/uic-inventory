@@ -21,7 +21,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import { Fragment, useContext } from 'react';

@@ -1,5 +1,5 @@
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import PropTypes from 'prop-types';
 import { BackButton } from '../PageElements';
 import GridHeading from './GridHeading';

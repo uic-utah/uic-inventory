@@ -1,5 +1,5 @@
 import { ChevronLeftIcon } from '@heroicons/react/20/solid';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import useNaicsCodes from './useNaicsCodes';

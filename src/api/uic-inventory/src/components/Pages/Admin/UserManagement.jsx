@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import { useContext, useMemo } from 'react';

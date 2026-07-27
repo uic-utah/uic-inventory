@@ -7,7 +7,7 @@ import { webMercatorToGeographic } from '@arcgis/core/geometry/support/webMercat
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGraphicManager, useViewPointZooming, useWebMap } from '@ugrc/utilities/hooks';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import { useContext, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';

@@ -2,7 +2,7 @@ import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { ErrorMessage } from '@hookform/error-message';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import { useContext, useEffect, useState } from 'react';

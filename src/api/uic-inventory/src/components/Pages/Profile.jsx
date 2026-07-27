@@ -2,7 +2,7 @@ import { Description, DialogTitle, Field, Label, Switch } from '@headlessui/reac
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOpenClosed } from '@ugrc/utilities/hooks';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import { useContext, useEffect } from 'react';
