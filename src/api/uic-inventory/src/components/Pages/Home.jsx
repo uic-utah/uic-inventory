@@ -19,7 +19,7 @@ import {
 } from '@tanstack/react-table';
 import { TooltipProvider, TooltipTrigger } from '../Hooks';
 import { useOpenClosed } from '@ugrc/utilities/hooks';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import PropTypes from 'prop-types';
 import { Fragment, useContext, useMemo, useRef } from 'react';

@@ -1,6 +1,6 @@
 import { ErrorMessage } from '@hookform/error-message';
 import { useQuery } from '@tanstack/react-query';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import { useCombobox } from 'downshift';
 import ky from 'ky';
 import PropTypes from 'prop-types';

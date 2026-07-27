@@ -1,6 +1,6 @@
 import { CheckIcon, CloudArrowUpIcon, QuestionMarkCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ErrorMessage } from '@hookform/error-message';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
