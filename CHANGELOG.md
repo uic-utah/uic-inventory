@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.13](https://github.com/agrc/uic-inventory/compare/v1.0.12...v1.0.13) (2026-07-27)
+
+
+### Bug Fixes
+
+* add missing inventory status messages for clarity ([43a4e76](https://github.com/agrc/uic-inventory/commit/43a4e7607e48ebe13bd7b4a75dd583c8f898cf9d))
+
 ## [1.0.12](https://github.com/agrc/uic-inventory/compare/v1.0.11...v1.0.12) (2026-03-31)
 
 
