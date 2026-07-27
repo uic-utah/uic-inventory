@@ -4,7 +4,7 @@ import { ArrowPathIcon, ExclamationCircleIcon, InformationCircleIcon } from '@he
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useOpenClosed, useWebMap } from '@ugrc/utilities/hooks';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import ky from 'ky';
 import throttle from 'lodash.throttle';
 import PropTypes from 'prop-types';
@@ -1011,6 +1011,10 @@ const WaterSystemContact = ({ contact }) => {
 
 const whatIsNeeded = (status) => {
   switch (status) {
+    case 'incomplete':
+      return 'Draft, submission incomplete';
+    case 'complete':
+      return 'Complete, awaiting submission';
     case 'submitted':
       return 'Submitted, needs review';
     case 'underReview':
@@ -1035,6 +1039,22 @@ const Status = ({ data, confirmations }) => {
     <div className="mb-4 flex justify-start">
       {isOpen ? (
         <div className="flex gap-4 rounded border bg-white px-3 py-2 shadow">
+          {['incomplete', 'complete'].includes(data?.status) && (
+            <>
+              <div>
+                <Label>Inventory status</Label>
+                <Value>{whatIsNeeded(data?.status)}</Value>
+                <p className="mt-4 text-sm text-gray-600">
+                  {data?.status === 'incomplete'
+                    ? 'This inventory is missing required information. The owner or operator must complete and submit it before it can enter review.'
+                    : 'This inventory is complete and awaiting submission by the owner or operator before it can enter review.'}
+                </p>
+              </div>
+              <button onClick={toggle} data-style="alternate" className="self-end">
+                close
+              </button>
+            </>
+          )}
           {['submitted', 'underReview'].includes(data?.status) && (
             <>
               <div className="flex flex-col justify-between">
@@ -1158,6 +1178,8 @@ const Status = ({ data, confirmations }) => {
           onClick={toggle}
           className={clsx(
             'inline-flex select-none items-center justify-center self-center rounded rounded-l-md border border-transparent px-4 py-2 font-medium text-white shadow-md focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2',
+            data?.status === 'incomplete' && 'bg-gray-700 hover:bg-gray-900',
+            data?.status === 'complete' && 'bg-indigo-700 hover:bg-indigo-900',
             data?.status === 'submitted' && 'bg-blue-700 hover:bg-blue-900',
             data?.status === 'underReview' && 'bg-amber-700 hover:bg-amber-900',
             data?.status === 'approved' && 'bg-fuchsia-700 hover:bg-fuchsia-900',
